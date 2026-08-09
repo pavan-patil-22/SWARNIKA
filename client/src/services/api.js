@@ -5,7 +5,7 @@ import { INITIAL_PRODUCTS } from '../data/mockData';
 const getApiBaseUrl = () => {
   const host = window.location.hostname;
   // return `http://${host}:7000/api`;
-  return `https://swarnika-9eij.onrender.com`;
+  return `https://swarnika-9eij.onrender.com/api`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
