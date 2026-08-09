@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:wght@600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#FAF9F5] text-[#1A1A1A] font-sans antialiased selection:bg-[#D4AF37] selection:text-black;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-luxury {
+    font-family: 'Cinzel', 'Playfair Display', serif;
+  }
+}
+
+/* Regal Royal Brand Typography */
+.font-brand-royal {
+  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+}
+
+.text-gold-royal {
+  background: linear-gradient(135deg, #78580E 0%, #B8860B 25%, #D4AF37 50%, #F5E59C 75%, #997A15 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShine 5s linear infinite;
+  filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.1));
+}
+
+@keyframes goldShine {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF9F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4AF37;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8860B;
+}
+
+/* Gold Gradient Utilities */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #997A15 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #F3E08B 50%, #B8860B 100%);
+}
+
+.bg-gold-shine {
+  background: linear-gradient(90deg, #D4AF37 0%, #FFF8D6 50%, #D4AF37 100%);
+  background-size: 200% auto;
+  animation: shine 3s linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* White & Gold Glassmorphism */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.shadow-gold-glow {
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
