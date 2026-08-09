@@ -4,7 +4,8 @@ import { INITIAL_PRODUCTS } from '../data/mockData';
 // Dynamic API Base URL detection
 const getApiBaseUrl = () => {
   const host = window.location.hostname;
-  return `http://${host}:7000/api`;
+  // return `http://${host}:7000/api`;
+  return `https://swarnika-9eij.onrender.com`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
