@@ -84,7 +84,7 @@ export default function Footer() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center gap-3.5">
             <img 
-              src="/logoSHOP.png" 
+              src="/logoshop.png" 
               alt="SWARNIKA Logo" 
               className="h-16 sm:h-20 w-auto object-contain"
               onError={(e) => {
