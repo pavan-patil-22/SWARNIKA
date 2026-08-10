@@ -1,4 +1,5 @@
 import Setting from '../models/Setting.js';
+import GoldRateHistory from '../models/GoldRateHistory.js';
 
 export const getSettings = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ export const getSettings = async (req, res) => {
         goldRate22K: 6850,
         goldRate24K: 7470,
         goldRate18K: 5600,
-        goldRateLastUpdated: "2026-08-08",
+        goldRateLastUpdated: new Date().toISOString().split('T')[0],
         cloudinaryCloudName: "",
         cloudinaryApiKey: "",
         cloudinaryApiSecret: "",
@@ -24,6 +25,20 @@ export const getSettings = async (req, res) => {
         contactPhone: "94813 04117"
       });
     }
+
+    // Upsert initial history record if empty
+    const historyCount = await GoldRateHistory.countDocuments();
+    if (historyCount === 0) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      await GoldRateHistory.create({
+        date: todayStr,
+        rate22K: setting.goldRate22K || 6850,
+        rate24K: setting.goldRate24K || 7470,
+        rate18K: setting.goldRate18K || 5600,
+        timestamp: new Date()
+      });
+    }
+
     res.json(setting);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -56,16 +71,43 @@ export const updateSettings = async (req, res) => {
     }
 
     await setting.save();
-    console.log("Successfully updated SWARNIKA settings in MongoDB:", {
-      websiteName: setting.websiteName,
-      slogan: setting.slogan,
-      email: setting.contactEmail,
-      phone: setting.contactPhone
-    });
+
+    // 1. Upsert Today's Gold Rate in History
+    const todayStr = setting.goldRateLastUpdated || new Date().toISOString().split('T')[0];
+    await GoldRateHistory.findOneAndUpdate(
+      { date: todayStr },
+      {
+        rate22K: setting.goldRate22K,
+        rate24K: setting.goldRate24K,
+        rate18K: setting.goldRate18K,
+        timestamp: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    // 2. Automatically Purge History Records Older Than 30 Days (Rolling 1 Month Window)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const deleteResult = await GoldRateHistory.deleteMany({ timestamp: { $lt: thirtyDaysAgo } });
+    if (deleteResult.deletedCount > 0) {
+      console.log(`Purged ${deleteResult.deletedCount} gold rate records older than 30 days.`);
+    }
 
     res.json(setting);
   } catch (error) {
     console.error("Setting update error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getGoldHistory = async (req, res) => {
+  try {
+    // Return last 30 days history sorted chronologically
+    const history = await GoldRateHistory.find()
+      .sort({ timestamp: 1 })
+      .limit(30);
+
+    res.json(history);
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };

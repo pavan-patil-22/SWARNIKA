@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Star, 
   ShoppingBag, 
@@ -14,11 +14,16 @@ import {
 import { productService, settingService } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import JewelleryCareGuide from '../components/common/JewelleryCareGuide';
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
@@ -66,6 +71,23 @@ export default function ProductDetail() {
   const isFavorited = isInWishlist(product.id);
   const imagesList = product.images?.length > 0 ? product.images : [product.image];
 
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    toast.success(`Added ${quantity} item(s) to shopping bag!`, {
+      icon: '✨'
+    });
+  };
+
+  const handleQuickBuy = () => {
+    if (!isAuthenticated) {
+      toast.info('Please log in to proceed with direct checkout');
+      navigate('/login', { state: { redirect: '/checkout' } });
+      return;
+    }
+    addToCart(product, quantity);
+    navigate('/checkout');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 bg-[#FAF9F5] text-slate-800">
       
@@ -100,84 +122,99 @@ export default function ProductDetail() {
                     selectedImage === imgUrl ? 'border-gold shadow-gold-glow scale-105' : 'border-gray-200'
                   }`}
                 >
-                  <img src={imgUrl} alt="" className="w-full h-full object-cover rounded-lg" />
+                  <img src={imgUrl} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Right: Product Details & Actions */}
+        {/* Right: Product Specification & Actions */}
         <div className="space-y-6">
-          
-          <div className="space-y-2 border-b border-gray-200 pb-4">
-            <span className="text-xs text-amber-800 font-bold uppercase tracking-widest block">
-              {product.category} • SKU: {product.sku}
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-amber-800 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full border border-gold/30">
+              Category: {product.category}
             </span>
-            <h1 className="font-luxury font-bold text-3xl text-slate-900 leading-snug">{product.name}</h1>
-            
-            {/* Show rating IF rating available */}
-            {product.rating > 0 && (
-              <div className="flex items-center gap-2 pt-1">
-                <div className="flex items-center text-amber-400">
-                  {Array.from({ length: Math.round(product.rating) }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400" />
-                  ))}
-                </div>
-                <span className="text-xs font-bold text-slate-900">{product.rating} / 5.0</span>
-                <span className="text-xs text-gray-500">({product.reviewCount || product.reviews?.length || 0} Ratings)</span>
+            <h1 className="font-luxury font-bold text-2xl sm:text-4xl text-slate-900 leading-tight">
+              {product.name}
+            </h1>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1 text-gold font-bold">
+                <Star className="w-4 h-4 fill-gold text-gold" />
+                <span>{product.rating}</span>
+                <span className="text-gray-400 font-normal">({product.reviewCount || 0} reviews)</span>
               </div>
-            )}
+              <span className="text-gray-400">|</span>
+              <span className="text-gray-500 font-mono">SKU: {product.sku}</span>
+            </div>
           </div>
 
-          {/* Pricing */}
-          <div className="flex items-baseline gap-4">
-            <span className="font-luxury font-bold text-3xl text-gold-gradient">₹{product.price.toLocaleString()}</span>
-            {product.originalPrice > product.price && (
-              <span className="text-base text-gray-400 line-through">₹{product.originalPrice.toLocaleString()}</span>
-            )}
-            {product.discountPercent > 0 && (
-              <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
-                {product.discountPercent}% OFF
-              </span>
-            )}
+          {/* Pricing Box */}
+          <div className="p-4 rounded-2xl bg-white border border-gold/30 shadow-xs space-y-1">
+            <div className="flex items-baseline gap-3">
+              <strong className="font-luxury font-bold text-3xl text-slate-900">₹{product.price.toLocaleString()}</strong>
+              {product.originalPrice > product.price && (
+                <span className="text-sm text-gray-400 line-through">₹{product.originalPrice.toLocaleString()}</span>
+              )}
+              {product.discountPercent > 0 && (
+                <span className="bg-rose-100 text-rose-700 text-xs font-extrabold px-2.5 py-0.5 rounded-full">
+                  Save {product.discountPercent}%
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-amber-900 font-bold">
+              * Non-real gold: 1 Gram micro-gold electroplated brass/copper alloy item.
+            </p>
           </div>
 
-          {/* Mandatory Replica Disclaimer Notice */}
-          <div className="p-3.5 bg-amber-50/70 border border-gold/40 rounded-xl text-xs text-amber-900 leading-relaxed space-y-1">
-            <strong className="block font-luxury uppercase tracking-wider text-amber-800">1 Gram Polish Guarantee:</strong>
-            <p>{product.material}</p>
-          </div>
-
-          {/* Description */}
-          <p className="text-xs text-gray-600 leading-relaxed">{product.description}</p>
-
-          {/* Specs */}
-          <div className="grid grid-cols-2 gap-3 text-xs bg-white p-3 rounded-xl border border-gray-200">
-            <div><span className="text-gray-500">Weight:</span> <strong className="text-slate-900">{product.weight}</strong></div>
-            <div><span className="text-gray-500">Availability:</span> <strong className={product.stock > 0 ? "text-emerald-700" : "text-rose-600"}>{product.stock > 0 ? `${product.stock} units in stock` : 'Out of Stock'}</strong></div>
+          {/* Product Description */}
+          <div className="space-y-2">
+            <h3 className="font-luxury font-bold text-sm text-slate-900">Craftsmanship Details</h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              {product.description || "Designed with intricate heritage patterns and finished with a durable 1 Gram micro-gold plating for long-lasting shine and elegance."}
+            </p>
           </div>
 
           {/* Quantity & Action Buttons */}
-          <div className="space-y-3 pt-2">
+          <div className="space-y-4 pt-4 border-t border-gray-200">
             <div className="flex items-center gap-4">
-              <div className="flex items-center border border-gold/40 rounded-full bg-white px-3 py-1.5">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-slate-700 font-bold px-2">-</button>
-                <span className="text-xs font-bold px-3 text-slate-900">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} className="text-slate-700 font-bold px-2">+</button>
+              <span className="text-xs font-bold text-slate-700">Quantity:</span>
+              <div className="flex items-center border border-gold/40 rounded-xl bg-white">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-3 py-1.5 text-slate-700 font-bold hover:bg-amber-50"
+                >
+                  -
+                </button>
+                <span className="px-4 py-1.5 text-xs font-bold text-slate-900">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-3 py-1.5 text-slate-700 font-bold hover:bg-amber-50"
+                >
+                  +
+                </button>
               </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-slate-900 text-gold border border-gold/40 font-luxury font-bold text-xs py-3.5 rounded-full hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <ShoppingBag className="w-4 h-4 text-gold" /> Add to Cart
+              </button>
 
               <button
-                onClick={() => addToCart(product, quantity)}
-                className="flex-1 bg-gold-gradient text-slate-900 font-luxury font-bold text-xs py-3.5 px-6 rounded-full shadow-gold-glow hover:scale-102 transition-transform flex items-center justify-center gap-2"
+                onClick={handleQuickBuy}
+                className="flex-1 bg-gold-gradient text-slate-900 font-luxury font-bold text-xs py-3.5 rounded-full shadow-gold-glow hover:scale-102 transition-transform flex items-center justify-center gap-2"
               >
-                <ShoppingBag className="w-4 h-4" /> Add to Shopping Cart
+                Buy Now (Direct Checkout)
               </button>
 
               <button
                 onClick={() => toggleWishlist(product)}
-                className={`p-3.5 rounded-full border transition-colors ${
-                  isFavorited ? 'bg-rose-50 border-rose-300 text-rose-600' : 'bg-white border-gold/40 text-slate-700 hover:text-gold'
+                className={`p-3.5 rounded-full border border-gold/40 flex items-center justify-center transition-colors ${
+                  isFavorited ? 'bg-rose-50 text-rose-600 border-rose-300' : 'bg-white text-slate-700 hover:text-rose-600'
                 }`}
               >
                 <Heart className={`w-5 h-5 ${isFavorited ? 'fill-rose-600' : ''}`} />
@@ -185,21 +222,31 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Dynamic Admin Return Policy Days Indicator */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 text-xs">
-            <div className="flex items-center gap-2">
-              <RotateCcw className="w-4 h-4 text-gold" />
-              <span className="text-gray-600"><strong>{returnDays}-Day</strong> Hassle-Free Returns</span>
+          {/* Delivery & Assurance Cards */}
+          <div className="grid grid-cols-2 gap-3 pt-4 text-xs">
+            <div className="p-3 bg-white rounded-xl border border-gray-200 flex items-center gap-2.5">
+              <Truck className="w-5 h-5 text-gold shrink-0" />
+              <div>
+                <strong className="block text-slate-900 text-[11px]">Free COD Shipping</strong>
+                <span className="text-[10px] text-gray-500">Across India</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-gold" />
-              <span className="text-gray-600">Cash on Delivery Available</span>
+
+            <div className="p-3 bg-white rounded-xl border border-gray-200 flex items-center gap-2.5">
+              <RotateCcw className="w-5 h-5 text-gold shrink-0" />
+              <div>
+                <strong className="block text-slate-900 text-[11px]">{returnDays} Days Easy Returns</strong>
+                <span className="text-[10px] text-gray-500">Hassle-free policy</span>
+              </div>
             </div>
           </div>
 
         </div>
 
       </div>
+
+      {/* JEWELLERY CARE GUIDE COMPONENT */}
+      <JewelleryCareGuide />
 
       {/* CUSTOMER REVIEWS (SHOWN ONLY IF REVIEWS ARE AVAILABLE) */}
       {product.reviews && product.reviews.length > 0 && (

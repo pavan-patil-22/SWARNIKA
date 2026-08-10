@@ -10,7 +10,7 @@ import {
   contactService
 } from '../services/api';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 
@@ -41,30 +41,38 @@ export const AdminProvider = ({ children }) => {
         orderService.getOrders(null),
         contactService.getInquiries()
       ]);
-      setProducts(prods);
-      setRealGoldItems(goldItems);
-      setCategories(cats);
-      setBanners(bans);
-      setOffers(offs);
-      setSettings(sets);
-      setInquiries(inqs);
+
+      const safeProds = Array.isArray(prods) ? prods : [];
+      const safeGoldItems = Array.isArray(goldItems) ? goldItems : [];
+      const safeCats = Array.isArray(cats) ? cats : [];
+      const safeBans = Array.isArray(bans) ? bans : [];
+      const safeOffs = Array.isArray(offs) ? offs : [];
+      const safeOrds = Array.isArray(ords) ? ords : [];
+      const safeInqs = Array.isArray(inqs) ? inqs : [];
+
+      setProducts(safeProds);
+      setRealGoldItems(safeGoldItems);
+      setCategories(safeCats);
+      setBanners(safeBans);
+      setOffers(safeOffs);
+      setSettings(sets || {});
+      setInquiries(safeInqs);
       
-      const newOrders = ords.filter(o => o.isUnreadAdmin || o.orderStatus === 'Confirmed');
-      if (ords.length > allOrders.length && allOrders.length > 0) {
-        toast.info(`🔔 New COD Order Received! (${ords[0]?.id})`, {
+      const newOrders = safeOrds.filter(o => o.isUnreadAdmin || o.orderStatus === 'Confirmed');
+      if (safeOrds.length > (allOrders?.length || 0) && (allOrders?.length || 0) > 0) {
+        toast.info(`🔔 New COD Order Received! (${safeOrds[0]?.id})`, {
           icon: '👑',
-          style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' },
           autoClose: 5000
         });
       }
-      setAllOrders(ords);
+      setAllOrders(safeOrds);
       setUnreadOrdersCount(newOrders.length);
     } catch (e) {
       console.error("Admin data load error", e);
     } finally {
       setLoading(false);
     }
-  }, [allOrders.length]);
+  }, [allOrders?.length]);
 
   useEffect(() => {
     loadAllAdminData();
@@ -77,28 +85,35 @@ export const AdminProvider = ({ children }) => {
   const markAllOrdersAsRead = async () => {
     try {
       setUnreadOrdersCount(0);
-      setAllOrders(prev => prev.map(o => ({ ...o, isUnreadAdmin: false })));
+      setAllOrders(prev => (Array.isArray(prev) ? prev : []).map(o => ({ ...o, isUnreadAdmin: false })));
     } catch (e) {
       console.error(e);
     }
   };
 
-  const lowStockProducts = products.filter(p => (p.stock || 0) <= 5);
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safeOrders = Array.isArray(allOrders) ? allOrders : [];
+  const safeInquiries = Array.isArray(inquiries) ? inquiries : [];
+
+  const lowStockProducts = safeProducts.filter(p => (p.stock || 0) <= 5);
 
   const todayStr = new Date().toISOString().split('T')[0];
-  const todayOrders = allOrders.filter(o => o.createdAt && o.createdAt.startsWith(todayStr));
+  const todayOrders = safeOrders.filter(o => o.createdAt && String(o.createdAt).startsWith(todayStr));
+  const todayOrdersCount = todayOrders.length;
   const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
   const currentMonthStr = todayStr.substring(0, 7);
-  const monthlyOrders = allOrders.filter(o => o.createdAt && o.createdAt.startsWith(currentMonthStr));
+  const monthlyOrders = safeOrders.filter(o => o.createdAt && String(o.createdAt).startsWith(currentMonthStr));
   const monthlyRevenue = monthlyOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-  const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const pendingOrders = allOrders.filter(o => o.orderStatus === 'Pending' || o.orderStatus === 'Confirmed' || o.orderStatus === 'Packed');
-  const deliveredOrders = allOrders.filter(o => o.orderStatus === 'Delivered');
+  const totalRevenue = safeOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalUsersCount = 124;
 
-  const pendingReturnsCount = allOrders.filter(o => o.returnStatus === 'Requested').length;
-  const pendingInquiriesCount = inquiries.filter(i => i.status === 'Pending').length;
+  const pendingOrdersCount = safeOrders.filter(o => o.orderStatus === 'Pending' || o.orderStatus === 'Confirmed' || o.orderStatus === 'Packed').length;
+  const deliveredOrdersCount = safeOrders.filter(o => o.orderStatus === 'Delivered').length;
+
+  const pendingReturnsCount = safeOrders.filter(o => o.returnStatus === 'Requested').length;
+  const pendingInquiriesCount = safeInquiries.filter(i => i.status === 'Pending').length;
 
   const getRevenueChartData = () => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -108,7 +123,7 @@ export const AdminProvider = ({ children }) => {
     });
 
     return last7Days.map(dateStr => {
-      const dayOrders = allOrders.filter(o => o.createdAt && o.createdAt.startsWith(dateStr));
+      const dayOrders = safeOrders.filter(o => o.createdAt && String(o.createdAt).startsWith(dateStr));
       const revenue = dayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
       const displayDate = new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return { date: displayDate, revenue, orders: dayOrders.length };
@@ -117,8 +132,10 @@ export const AdminProvider = ({ children }) => {
 
   const getCategoryDistributionData = () => {
     const counts = {};
-    products.forEach(p => {
-      counts[p.category] = (counts[p.category] || 0) + 1;
+    safeProducts.forEach(p => {
+      if (p.category) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
     });
     return Object.keys(counts).map(catName => ({
       name: catName,
@@ -130,7 +147,7 @@ export const AdminProvider = ({ children }) => {
     const statuses = ['Pending', 'Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled'];
     return statuses.map(st => ({
       name: st,
-      value: allOrders.filter(o => o.orderStatus === st).length
+      value: safeOrders.filter(o => o.orderStatus === st).length
     })).filter(item => item.value > 0);
   };
 
@@ -212,7 +229,7 @@ export const AdminProvider = ({ children }) => {
   // Settings
   const updateGlobalSettings = async (newSettings) => {
     const updated = await settingService.updateSettings(newSettings);
-    setSettings(updated);
+    setSettings(updated || {});
   };
 
   // Export Reports
@@ -221,19 +238,19 @@ export const AdminProvider = ({ children }) => {
     let title = `${type.toUpperCase()} REPORT`;
 
     if (type === 'orders') {
-      dataToExport = allOrders.map(o => ({
+      dataToExport = safeOrders.map(o => ({
         "Order ID": o.id,
         "Customer": o.userName,
         "Email": o.userEmail,
         "Phone": o.phone,
-        "Items Count": o.items.length,
+        "Items Count": o.items?.length || 0,
         "Total (INR)": `₹${o.total}`,
         "Status": o.orderStatus,
         "Payment": o.paymentMethod,
-        "Date": new Date(o.createdAt).toLocaleDateString()
+        "Date": new Date(o.createdAt || Date.now()).toLocaleDateString()
       }));
     } else if (type === 'products') {
-      dataToExport = products.map(p => ({
+      dataToExport = safeProducts.map(p => ({
         "SKU": p.sku,
         "Name": p.name,
         "Category": p.category,
@@ -243,9 +260,9 @@ export const AdminProvider = ({ children }) => {
         "Status": p.stock <= 5 ? "LOW STOCK" : "In Stock"
       }));
     } else if (type === 'revenue') {
-      dataToExport = allOrders.map(o => ({
+      dataToExport = safeOrders.map(o => ({
         "Order ID": o.id,
-        "Date": new Date(o.createdAt).toLocaleDateString(),
+        "Date": new Date(o.createdAt || Date.now()).toLocaleDateString(),
         "Subtotal": `₹${o.subtotal}`,
         "Discount": `₹${o.discount}`,
         "Tax (3% GST)": `₹${o.tax}`,
@@ -258,59 +275,67 @@ export const AdminProvider = ({ children }) => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, type.toUpperCase());
       const ext = format === 'csv' ? 'csv' : 'xlsx';
-      XLSX.writeFile(workbook, `Aureate_Luxe_${type}_Report.${ext}`);
+      XLSX.writeFile(workbook, `SWARNIKA_${type}_Report.${ext}`);
     } else if (format === 'pdf') {
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.setTextColor(212, 175, 55);
-      doc.text("AUREATE LUXE - 1 GRAM JEWELLERY", 14, 20);
-      doc.setFontSize(12);
-      doc.setTextColor(17, 17, 17);
-      doc.text(`${title} - Generated on ${new Date().toLocaleString()}`, 14, 28);
-      doc.setFontSize(9);
-      doc.text("Note: Products are 1 Gram Imitation Jewellery (Not Real Gold)", 14, 34);
+      try {
+        const doc = new jsPDF();
+        doc.setFontSize(20);
+        doc.setTextColor(212, 175, 55);
+        doc.text("SWARNIKA LUXURY HERITAGE", 14, 20);
 
-      if (dataToExport.length > 0) {
-        const headers = Object.keys(dataToExport[0]);
-        const rows = dataToExport.map(obj => Object.values(obj));
+        doc.setFontSize(11);
+        doc.setTextColor(17, 17, 17);
+        doc.text(`${title} - Generated on ${new Date().toLocaleString()}`, 14, 28);
 
-        doc.autoTable({
-          head: [headers],
-          body: rows,
-          startY: 40,
-          headStyles: { fillColor: [212, 175, 55], textColor: [11, 11, 11] },
-          alternateRowStyles: { fillColor: [250, 248, 245] }
-        });
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Honnali Showroom Store Management & Financial Audit Report", 14, 34);
+
+        if (dataToExport.length > 0) {
+          const headers = Object.keys(dataToExport[0]);
+          const rows = dataToExport.map(obj => Object.values(obj));
+
+          autoTable(doc, {
+            head: [headers],
+            body: rows,
+            startY: 40,
+            headStyles: { fillColor: [212, 175, 55], textColor: [15, 23, 42], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [250, 248, 245] }
+          });
+        }
+        doc.save(`SWARNIKA_${type}_Report.pdf`);
+        toast.success(`Exported ${type.toUpperCase()} PDF report!`);
+      } catch (err) {
+        console.error("Report PDF error:", err);
+        toast.error("Failed to generate PDF report");
       }
-      doc.save(`Aureate_Luxe_${type}_Report.pdf`);
     }
   };
 
   return (
     <AdminContext.Provider value={{
-      products,
-      realGoldItems,
-      categories,
-      banners,
-      offers,
+      products: safeProducts,
+      realGoldItems: Array.isArray(realGoldItems) ? realGoldItems : [],
+      categories: Array.isArray(categories) ? categories : [],
+      banners: Array.isArray(banners) ? banners : [],
+      offers: Array.isArray(offers) ? offers : [],
       settings,
-      allOrders,
-      inquiries,
+      allOrders: safeOrders,
+      inquiries: safeInquiries,
       unreadOrdersCount,
       loading,
-      lowStockProducts,
-      todayOrdersCount: todayOrders.length,
+      todayOrdersCount,
       todayRevenue,
       monthlyRevenue,
       totalRevenue,
-      pendingOrdersCount: pendingOrders.length,
-      deliveredOrdersCount: deliveredOrders.length,
+      totalUsersCount,
+      lowStockProducts,
+      pendingOrdersCount,
+      deliveredOrdersCount,
       pendingReturnsCount,
       pendingInquiriesCount,
-      totalUsersCount: 24,
-      getRevenueChartData,
-      getCategoryDistributionData,
-      getOrderStatusPieData,
+      loadAllAdminData,
+      markAllOrdersAsRead,
       saveProduct,
       removeProduct,
       saveRealGoldItem,
@@ -323,13 +348,19 @@ export const AdminProvider = ({ children }) => {
       removeOffer,
       updateGlobalSettings,
       exportReport,
-      loadAllAdminData,
-      reloadAdminData: loadAllAdminData,
-      markAllOrdersAsRead
+      getRevenueChartData,
+      getCategoryDistributionData,
+      getOrderStatusPieData
     }}>
       {children}
     </AdminContext.Provider>
   );
 };
 
-export const useAdmin = () => useContext(AdminContext);
+export const useAdmin = () => {
+  const context = useContext(AdminContext);
+  if (!context) {
+    throw new Error('useAdmin must be used within an AdminProvider');
+  }
+  return context;
+};

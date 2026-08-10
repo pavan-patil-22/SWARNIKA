@@ -88,13 +88,13 @@ export default function AdminProducts() {
       name: '',
       sku: `1G-${Math.floor(1000 + Math.random() * 9000)}`,
       category: categories[0]?.name || 'Necklaces',
-      description: 'Micro-plated heirloom replica crafted with traditional 1 gram polish finish.',
-      price: 1499,
-      originalPrice: 2999,
-      stock: 15,
-      images: ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80'],
+      description: '',
+      price: '',
+      originalPrice: '',
+      stock: '',
+      images: [],
       material: 'Brass-Copper alloy with 1 Gram Gold Polish (Imitation Jewellery)',
-      weight: '45 grams',
+      weight: '',
       featured: false,
       bestSeller: false,
       newArrival: true,
@@ -461,9 +461,14 @@ export default function AdminProducts() {
         })}
       </div>
 
-      {/* CREATE & EDIT MODAL */}
+      {/* CREATE & EDIT MODAL WITH OUTSIDE BACKDROP CLICK CLOSE */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+        >
           <div className="bg-white border border-gold/40 max-w-2xl w-full p-6 rounded-2xl space-y-4 text-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">

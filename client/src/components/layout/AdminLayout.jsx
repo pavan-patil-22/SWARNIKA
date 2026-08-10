@@ -17,7 +17,8 @@ import {
   Bell,
   TrendingUp,
   CheckCircle,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAdmin } from '../../context/AdminContext';
@@ -38,6 +39,7 @@ export default function AdminLayout() {
 
   const location = useLocation();
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Daily Gold Rate Modal State
   const [showGoldRateModal, setShowGoldRateModal] = useState(false);
@@ -151,9 +153,14 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-[#FAF9F5] text-slate-800 flex relative">
 
-      {/* DAILY GOLD RATE MODAL OVERLAY */}
+      {/* DAILY GOLD RATE MODAL OVERLAY WITH OUTSIDE CLICK CLOSE */}
       {showGoldRateModal && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget && isGoldUpdatedToday) setShowGoldRateModal(false);
+          }}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+        >
           <div className="bg-white border-2 border-gold max-w-lg w-full p-6 sm:p-8 rounded-3xl space-y-6 text-slate-800 shadow-2xl relative animate-fadeIn">
             
             {/* Close button allowed ONLY IF rates are already updated today */}
@@ -245,25 +252,115 @@ export default function AdminLayout() {
         </div>
       )}
 
+      {/* MOBILE SIDEBAR DRAWER */}
+      {mobileSidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex">
+          <div className="w-72 bg-white h-full flex flex-col p-4 shadow-2xl border-r border-gold/30 space-y-4 overflow-y-auto">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <img src="/shoplogo.png" alt="SWARNIKA" className="h-10 w-auto object-contain" />
+                <div className="leading-tight">
+                  <span className="font-brand-royal font-black text-lg text-gold-royal block uppercase">SWARNIKA</span>
+                  <span className="text-[8px] text-amber-900 font-extrabold uppercase tracking-widest">LUXURY HERITAGE</span>
+                </div>
+              </div>
+              <button onClick={() => setMobileSidebarOpen(false)} className="p-2 text-gray-500 hover:text-slate-900">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <nav className="flex-1 space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                
+                if (item.onClick) {
+                  return (
+                    <button
+                      key={item.label}
+                      onClick={() => {
+                        item.onClick();
+                        setMobileSidebarOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-900 border border-gold/30 text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-4 h-4 text-gold" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? 'bg-gold-gradient text-slate-900 shadow-gold-glow'
+                        : 'text-slate-700 hover:bg-amber-50 hover:text-gold'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-slate-900' : 'text-gold'}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="pt-2 border-t border-gray-100 space-y-2">
+              {/* <Link
+                to="/"
+                target="_blank"
+                className="flex items-center justify-center gap-2 text-xs font-bold text-slate-900 bg-amber-50 p-2.5 rounded-xl border border-gold/30"
+              >
+                <Crown className="w-4 h-4 text-gold" /> View Live SWARNIKA Store
+              </Link> */}
+              
+              <button
+                onClick={logout}
+                className="w-full flex items-center justify-center gap-2 text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-xl"
+              >
+                <LogOut className="w-4 h-4" /> Admin Logout
+              </button>
+            </div>
+
+          </div>
+          <div className="flex-1" onClick={() => setMobileSidebarOpen(false)} />
+        </div>
+      )}
+
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gold/30 sticky top-0 h-screen z-30 shadow-sm">
         
         {/* Header */}
         <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gold-gradient p-0.5 shadow-gold-glow flex items-center justify-center shrink-0 overflow-hidden">
-            <img 
-              src="/shoplogo.png" 
-              alt="SWARNIKA Logo" 
-              className="w-full h-full object-cover rounded-full bg-white p-0.5"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=150&q=80";
-              }}
-            />
-          </div>
-          <div>
-            <h2 className="font-luxury font-extrabold text-slate-900 text-base tracking-wide leading-none">SWARNIKA</h2>
-            <span className="text-[9px] text-amber-900 block font-extrabold uppercase tracking-widest mt-1">LUXURY HERITAGE</span>
+          <img 
+            src="/shoplogo.png" 
+            alt="SWARNIKA Logo" 
+            className="h-12 w-auto object-contain shrink-0"
+            onError={(e) => {
+              e.target.onerror = null;
+            }}
+          />
+          <div className="leading-tight">
+            <h2 className="font-brand-royal font-black text-slate-900 text-lg tracking-wide uppercase">SWARNIKA</h2>
+            <span className="text-[8px] text-amber-900 block font-extrabold uppercase tracking-widest mt-0.5">LUXURY HERITAGE</span>
           </div>
         </div>
 
@@ -351,12 +448,20 @@ export default function AdminLayout() {
         <header className="bg-white border-b border-gray-200 sticky top-0 z-20 px-4 sm:px-6 py-3 flex items-center justify-between shadow-xs">
           
           <div className="flex items-center gap-3">
-            <h1 className="font-luxury font-bold text-xl text-slate-900 hidden sm:block">
+            {/* Mobile Hamburger Menu Toggle Button */}
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="lg:hidden p-2 text-slate-700 hover:text-gold rounded-lg border border-gray-200 bg-gray-50"
+            >
+              <Menu className="w-5 h-5 text-slate-800" />
+            </button>
+
+            <h1 className="font-luxury font-bold text-base sm:text-xl text-slate-900 line-clamp-1">
               {navItems.find(i => i.path === location.pathname)?.label || 'SWARNIKA Admin Workspace'}
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             
             {/* Quick Gold Rates Header Chip */}
             <button
@@ -434,7 +539,7 @@ export default function AdminLayout() {
             </div>
 
             {/* Admin Profile Chip */}
-            <div className="flex items-center gap-2 pl-3 border-l border-gray-200">
+            <div className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-gray-200">
               <div className="w-8 h-8 rounded-full bg-gold-gradient text-slate-900 font-luxury font-bold text-xs flex items-center justify-center shadow">
                 S
               </div>
@@ -449,7 +554,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content Viewport */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
 

@@ -14,7 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { orderService, productService, uploadService } from '../services/api';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
 
 export default function Orders() {
@@ -62,9 +62,7 @@ export default function Orders() {
       const urls = await uploadService.uploadDeviceFiles(files);
       if (urls.length > 0) {
         setReturnImage(urls[0]);
-        toast.success('Return proof image uploaded to Cloudinary!', {
-          style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' }
-        });
+        toast.success('Return proof image uploaded to Cloudinary!');
       }
     } catch (err) {
       toast.error('Image upload failed');
@@ -77,48 +75,61 @@ export default function Orders() {
   const downloadInvoicePDF = (order) => {
     try {
       const doc = new jsPDF();
+      const orderIdStr = order.id || order._id || 'ORD-1001';
       
-      doc.setFontSize(20);
+      doc.setFontSize(22);
       doc.setTextColor(212, 175, 55);
-      doc.text("AUREATE LUXE", 14, 20);
-      doc.setFontSize(10);
+      doc.text("SWARNIKA", 14, 20);
+
+      doc.setFontSize(9);
+      doc.setTextColor(140, 100, 20);
+      doc.text("LUXURY HERITAGE", 14, 25);
+
+      doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);
-      doc.text("1 Gram Micro-Gold Plated Replica Jewellery Store", 14, 26);
-      doc.text("GSTIN: 29AAAAA0000A1Z5 | Support: support@aureateluxe.com", 14, 32);
+      doc.text("1 Gram Micro-Gold Plated Replica Jewellery & 22K Solid Gold Showroom", 14, 31);
+      doc.text("GSTIN: 29SWARNIKA916Z5 | Email: swarnika.luxury@gmail.com | Phone: 94813 04117", 14, 36);
 
       doc.setDrawColor(212, 175, 55);
-      doc.line(14, 36, 196, 36);
+      doc.setLineWidth(0.5);
+      doc.line(14, 40, 196, 40);
 
       doc.setFontSize(12);
       doc.setTextColor(17, 17, 17);
-      doc.text(`TAX INVOICE: #${order.id}`, 14, 46);
+      doc.text(`TAX INVOICE / RECEIPT: #${orderIdStr}`, 14, 49);
       doc.setFontSize(9);
-      doc.text(`Date: ${new Date(order.createdAt).toLocaleString()}`, 14, 52);
-      doc.text(`Payment Mode: ${order.paymentMethod} (${order.paymentStatus})`, 14, 58);
+      doc.text(`Date: ${new Date(order.createdAt || Date.now()).toLocaleString()}`, 14, 55);
+      doc.text(`Payment Mode: ${order.paymentMethod || 'Cash on Delivery'} (${order.paymentStatus || 'Pending'})`, 14, 61);
 
-      doc.text(`Billed To: ${order.userName} (${order.userEmail})`, 120, 46);
-      doc.text(`Address: ${order.shippingAddress?.street || 'N/A'}`, 120, 52);
-      doc.text(`${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.pincode || ''}`, 120, 58);
+      doc.text(`Billed To: ${order.userName || user?.name || 'Valued Customer'}`, 120, 49);
+      
+      const addressStr = typeof order.shippingAddress === 'string' 
+        ? order.shippingAddress 
+        : `${order.shippingAddress?.street || ''}, ${order.shippingAddress?.city || ''} ${order.shippingAddress?.pincode || ''}`;
+      
+      const splitAddress = doc.splitTextToSize(`Address: ${addressStr || 'Honnali Showroom'}`, 75);
+      doc.text(splitAddress, 120, 55);
 
       const headers = [["Item Description", "SKU", "Price", "Qty", "Subtotal"]];
-      const rows = order.items.map(item => [
-        item.name,
-        item.sku || '1G-ITEM',
+      const rows = (order.items || []).map(item => [
+        item.name || '1-Gram Jewellery Item',
+        item.sku || '1G-SWARNIKA',
         `Rs. ${item.price}`,
-        item.quantity,
-        `Rs. ${item.price * item.quantity}`
+        item.quantity || 1,
+        `Rs. ${(item.price || 0) * (item.quantity || 1)}`
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         head: headers,
         body: rows,
-        startY: 66,
-        headStyles: { fillColor: [212, 175, 55], textColor: [11, 11, 11], fontStyle: 'bold' },
+        startY: 72,
+        headStyles: { fillColor: [212, 175, 55], textColor: [15, 23, 42], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [250, 248, 245] }
       });
 
-      const finalY = doc.lastAutoTable.finalY + 10;
+      const finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 110) + 12;
       doc.setFontSize(10);
+      doc.setTextColor(17, 17, 17);
       doc.text(`Subtotal (Tax Included): Rs. ${order.subtotal || order.total}`, 130, finalY);
       doc.text(`Delivery Fee: Rs. ${order.deliveryFee || 0}`, 130, finalY + 6);
       doc.setFontSize(12);
@@ -128,9 +139,10 @@ export default function Orders() {
       doc.setFontSize(8);
       doc.setTextColor(120, 120, 120);
       doc.text("* Notice: Listed prices are inclusive of 3% GST tax. Products are 1 Gram micro-gold plated brass replica items (Non-gold).", 14, finalY + 28);
+      doc.text("Thank you for choosing SWARNIKA LUXURY HERITAGE - Honnali Showroom", 14, finalY + 33);
 
-      doc.save(`Invoice_${order.id}.pdf`);
-      toast.success(`Invoice PDF for ${order.id} downloaded!`, { style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' } });
+      doc.save(`SWARNIKA_Invoice_${orderIdStr}.pdf`);
+      toast.success(`Invoice PDF downloaded for Order #${orderIdStr}!`);
     } catch (err) {
       console.error("PDF generation error:", err);
       toast.error("Could not generate PDF invoice");

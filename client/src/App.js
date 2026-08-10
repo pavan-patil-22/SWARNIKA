@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -9,6 +9,9 @@ import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { OrderProvider } from './context/OrderContext';
 import { AdminProvider } from './context/AdminContext';
+
+// Common Components
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Layouts
 import GuestLayout from './components/layout/GuestLayout';
@@ -32,6 +35,7 @@ const Addresses = lazy(() => import('./pages/Addresses'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const RealGoldCollection = lazy(() => import('./pages/RealGoldCollection'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin Dashboard Lazy Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -50,9 +54,49 @@ const AdminContact = lazy(() => import('./pages/admin/AdminContact'));
 const LoadingFallback = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center bg-[#FAF9F5] text-gold space-y-3">
     <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin" />
-    <span className="font-luxury font-bold text-sm tracking-wider">Loading Aureate Luxe 1-Gram Experience...</span>
+    <span className="font-luxury font-bold text-sm tracking-wider">Loading SWARNIKA Experience...</span>
   </div>
 );
+
+// RENDER FREE TIER SERVER COLD-START BANNER COMPONENT (FULLY MOBILE RESPONSIVE)
+function ServerColdStartBanner() {
+  const [wakingState, setWakingState] = useState({ isWakingUp: false, isError: false });
+
+  useEffect(() => {
+    const handleEvent = (e) => {
+      setWakingState(e.detail || { isWakingUp: false, isError: false });
+    };
+    window.addEventListener('server-cold-start', handleEvent);
+    return () => window.removeEventListener('server-cold-start', handleEvent);
+  }, []);
+
+  if (!wakingState.isWakingUp) return null;
+
+  return (
+    <div className="fixed bottom-4 inset-x-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto z-[99999] sm:max-w-md w-auto bg-slate-900/95 backdrop-blur-md text-white border-2 border-gold p-3.5 sm:p-5 rounded-2xl shadow-2xl animate-fadeIn flex items-start justify-between gap-3">
+      <div className="flex items-start gap-2.5 sm:gap-3">
+        <div className="p-1.5 sm:p-2 bg-gold/20 text-gold rounded-full shrink-0 mt-0.5">
+          <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+        </div>
+        <div className="text-[11px] sm:text-xs space-y-0.5 sm:space-y-1">
+          <h4 className="font-luxury font-bold text-gold text-xs sm:text-sm">
+            SWARNIKA Cloud Server Waking Up
+          </h4>
+          <p className="text-gray-300 leading-snug sm:leading-relaxed">
+            Our cloud database server is currently spinning up (Render free tier). Please allow 30–40 seconds while we connect. Thank you for your patience or visit again shortly!
+          </p>
+        </div>
+      </div>
+      <button 
+        onClick={() => setWakingState({ isWakingUp: false, isError: false })}
+        className="text-gray-400 hover:text-white shrink-0 p-1 font-bold text-xs bg-white/10 rounded-full w-6 h-6 flex items-center justify-center"
+        aria-label="Dismiss banner"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
 
 export default function App() {
   return (
@@ -62,6 +106,8 @@ export default function App() {
           <CartProvider>
             <WishlistProvider>
               <Router>
+                <ScrollToTop />
+                <ServerColdStartBanner />
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>
                     
@@ -105,27 +151,27 @@ export default function App() {
                       <Route path="settings" element={<AdminSettings />} />
                     </Route>
 
-                    {/* Catch all fallback */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
+                    {/* Custom 404 Page Route */}
+                    <Route path="*" element={<NotFound />} />
 
                   </Routes>
                 </Suspense>
               </Router>
 
-              {/* Toast Notifications */}
+              {/* Compact Bottom Toast Notifications */}
               <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
+                position="bottom-center"
+                autoClose={2200}
+                hideProgressBar
                 newestOnTop
                 closeOnClick
                 rtl={false}
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                theme="light"
+                theme="dark"
+                toastClassName="!bg-slate-900 !text-gold !border !border-gold/40 !rounded-2xl !shadow-2xl !text-xs !py-2 !px-4 !mb-4"
               />
-              
 
             </WishlistProvider>
           </CartProvider>

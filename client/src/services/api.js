@@ -12,18 +12,55 @@ const API_BASE_URL = getApiBaseUrl();
 
 export const axiosClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 45000, // Extended 45s timeout for Render free tier cold-starts
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+let coldStartTimer = null;
 
 axiosClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Trigger cold-start notification if backend takes > 3.5 seconds
+  if (!coldStartTimer) {
+    coldStartTimer = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('server-cold-start', { detail: { isWakingUp: true } }));
+    }, 3500);
+  }
+
   return config;
 });
+
+axiosClient.interceptors.response.use(
+  (response) => {
+    if (coldStartTimer) {
+      clearTimeout(coldStartTimer);
+      coldStartTimer = null;
+    }
+    window.dispatchEvent(new CustomEvent('server-cold-start', { detail: { isWakingUp: false } }));
+    return response;
+  },
+  (error) => {
+    if (coldStartTimer) {
+      clearTimeout(coldStartTimer);
+      coldStartTimer = null;
+    }
+
+    // Check if error is network error or server down (502/503/504) or timeout
+    if (!error.response || error.code === 'ECONNABORTED' || [502, 503, 504].includes(error.response?.status)) {
+      window.dispatchEvent(new CustomEvent('server-cold-start', { detail: { isWakingUp: true, isError: true } }));
+    } else {
+      window.dispatchEvent(new CustomEvent('server-cold-start', { detail: { isWakingUp: false } }));
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export const authService = {
   login: async (email, password) => {
@@ -50,83 +87,28 @@ export const contactService = {
     return res.data;
   },
   getInquiries: async () => {
-    const res = await axiosClient.get('/contact');
-    return res.data;
-  },
-  replyInquiry: async (id, adminReply, replyMethod) => {
-    const res = await axiosClient.post(`/contact/reply/${id}`, { adminReply, replyMethod });
-    return res.data;
-  }
-};
-
-export const realGoldService = {
-  getRealGoldItems: async () => {
     try {
-      const res = await axiosClient.get('/real-gold');
+      const res = await axiosClient.get('/contact');
       return res.data;
     } catch (err) {
-      console.error('Error fetching real gold items:', err.message);
+      console.error('Error fetching inquiries from API:', err.message);
       return [];
     }
   },
-  createRealGoldItem: async (itemData) => {
-    const res = await axiosClient.post('/real-gold', itemData);
+  updateInquiryStatus: async (id, status) => {
+    const res = await axiosClient.put(`/contact/${id}`, { status });
     return res.data;
-  },
-  updateRealGoldItem: async (id, itemData) => {
-    const res = await axiosClient.put(`/real-gold/${id}`, itemData);
-    return res.data;
-  },
-  deleteRealGoldItem: async (id) => {
-    await axiosClient.delete(`/real-gold/${id}`);
-    return true;
-  }
-};
-
-export const reviewService = {
-  getReviews: async () => {
-    try {
-      const res = await axiosClient.get('/reviews');
-      return res.data;
-    } catch (err) {
-      console.error('Error fetching reviews:', err.message);
-      return [];
-    }
-  },
-  submitReview: async (reviewData) => {
-    const res = await axiosClient.post('/reviews', reviewData);
-    return res.data;
-  }
-};
-
-export const uploadService = {
-  uploadDeviceFiles: async (files) => {
-    const formData = new FormData();
-    const fileArray = Array.from(files);
-    fileArray.forEach(file => formData.append('images', file));
-
-    const res = await axiosClient.post('/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    return res.data.urls;
   }
 };
 
 export const productService = {
-  getProducts: async (params = {}) => {
+  getProducts: async () => {
     try {
-      const res = await axiosClient.get('/products', { params });
+      const res = await axiosClient.get('/products');
       return res.data;
     } catch (err) {
-      console.warn('API error, falling back to mock data:', err.message);
-      let list = [...INITIAL_PRODUCTS];
-      if (params.search) {
-        const q = params.search.toLowerCase();
-        list = list.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
-      }
-      if (params.category) list = list.filter(p => p.category === params.category);
-      if (params.featured) list = list.filter(p => p.featured);
-      return list;
+      console.warn('Backend API unavailable. Using fallback initial product data.');
+      return INITIAL_PRODUCTS;
     }
   },
   getProductById: async (id) => {
@@ -134,7 +116,7 @@ export const productService = {
       const res = await axiosClient.get(`/products/${id}`);
       return res.data;
     } catch (err) {
-      console.warn(`API error for product ${id}, falling back to mock data:`, err.message);
+      console.warn(`Product ${id} not found in API. Searching fallback data.`);
       return INITIAL_PRODUCTS.find(p => String(p.id) === String(id)) || null;
     }
   },
@@ -172,6 +154,30 @@ export const categoryService = {
   },
   deleteCategory: async (id) => {
     await axiosClient.delete(`/categories/${id}`);
+    return true;
+  }
+};
+
+export const realGoldService = {
+  getRealGoldItems: async () => {
+    try {
+      const res = await axiosClient.get('/real-gold');
+      return res.data;
+    } catch (err) {
+      console.error('Error fetching real gold items from API:', err.message);
+      return [];
+    }
+  },
+  createRealGoldItem: async (itemData) => {
+    const res = await axiosClient.post('/real-gold', itemData);
+    return res.data;
+  },
+  updateRealGoldItem: async (id, itemData) => {
+    const res = await axiosClient.put(`/real-gold/${id}`, itemData);
+    return res.data;
+  },
+  deleteRealGoldItem: async (id) => {
+    await axiosClient.delete(`/real-gold/${id}`);
     return true;
   }
 };
@@ -274,10 +280,66 @@ export const settingService = {
   updateSettings: async (newSettings) => {
     const res = await axiosClient.put('/settings', newSettings);
     return res.data;
+  },
+  getGoldHistory: async () => {
+    try {
+      const res = await axiosClient.get('/settings/gold-history');
+      return res.data;
+    } catch (err) {
+      console.error('Error fetching gold history from API:', err.message);
+      return [];
+    }
   }
 };
 
-// Cloudinary Multi-upload Handler
+export const reviewService = {
+  getReviews: async () => {
+    try {
+      const res = await axiosClient.get('/reviews');
+      return res.data;
+    } catch (err) {
+      console.error('Error fetching reviews from API:', err.message);
+      return [];
+    }
+  },
+  submitReview: async (reviewData) => {
+    const res = await axiosClient.post('/reviews', reviewData);
+    return res.data;
+  }
+};
+
+export const userService = {
+  getUsers: async () => {
+    try {
+      const res = await axiosClient.get('/users');
+      return res.data;
+    } catch (err) {
+      console.error('Error fetching users from API:', err.message);
+      return [];
+    }
+  }
+};
+
+export const uploadService = {
+  uploadDeviceFiles: async (files) => {
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('images', files[i]);
+      }
+      const res = await axiosClient.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return res.data.urls || [];
+    } catch (err) {
+      console.error('Device file upload error:', err.message);
+      throw err;
+    }
+  }
+};
+
 export const simulateCloudinaryUpload = async (files) => {
   return uploadService.uploadDeviceFiles(files);
 };

@@ -221,9 +221,14 @@ export default function Login() {
 
       </div>
 
-      {/* 1. FORGOT PASSWORD MODAL */}
+      {/* 1. FORGOT PASSWORD MODAL WITH OUTSIDE CLICK CLOSE */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowForgotModal(false);
+          }}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+        >
           <div className="bg-white border-2 border-gold max-w-md w-full p-6 sm:p-8 rounded-3xl space-y-6 text-slate-800 shadow-2xl relative">
             
             <button 

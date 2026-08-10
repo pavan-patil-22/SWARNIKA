@@ -1,10 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  ShieldCheck, 
-  Truck, 
-  RotateCcw, 
-  Gift, 
   Mail, 
   Phone, 
   MapPin, 
@@ -16,9 +12,7 @@ import { toast } from 'react-toastify';
 export default function Footer() {
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
-    toast.success('Thank you for subscribing to SWARNIKA LUXURY HERITAGE updates!', {
-      style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' }
-    });
+    toast.success('Thank you for subscribing to SWARNIKA LUXURY HERITAGE updates!');
   };
 
   const instagramImages = [
@@ -32,51 +26,6 @@ export default function Footer() {
 
   return (
     <footer className="bg-white text-slate-700 border-t border-gold/30 pt-12 pb-8">
-      {/* Trust Badges Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 rounded-2xl bg-amber-50/50 border border-gold/30 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-full bg-gold/10 text-amber-800 border border-gold/30">
-              <Truck className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-luxury font-bold text-slate-900 text-sm">Express Shipping</h4>
-              <p className="text-[11px] text-gray-500">Cash on Delivery Across India</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-full bg-gold/10 text-amber-800 border border-gold/30">
-              <RotateCcw className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-luxury font-bold text-slate-900 text-sm">7-Day Easy Returns</h4>
-              <p className="text-[11px] text-gray-500">Hassle-free return policy</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-full bg-gold/10 text-amber-800 border border-gold/30">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-luxury font-bold text-slate-900 text-sm">1 Gram Polish Guarantee</h4>
-              <p className="text-[11px] text-gray-500">High-durability micro gold plating</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-full bg-gold/10 text-amber-800 border border-gold/30">
-              <Gift className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-luxury font-bold text-slate-900 text-sm">Luxury Velvet Box</h4>
-              <p className="text-[11px] text-gray-500">Tamper-proof gift packaging</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer Links */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-gray-200">
         
@@ -84,7 +33,7 @@ export default function Footer() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center gap-3.5">
             <img 
-              src="/logoshop.png" 
+              src="/shoplogo.png" 
               alt="SWARNIKA Logo" 
               className="h-16 sm:h-20 w-auto object-contain"
               onError={(e) => {
@@ -170,7 +119,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 text-gold shrink-0" />
-              <span>SWARNIKA Showroom, Davanagere, IN</span>
+              <span>Swarnika Showroom, Honnali</span>
             </div>
           </div>
         </div>
@@ -210,7 +159,7 @@ export default function Footer() {
         <div className="flex items-center gap-4 text-gray-500 font-medium">
           <span>Cash on Delivery Available</span>
           <span>•</span>
-          <span>Davangere Showroom</span>
+          <span>Honnali Showroom</span>
         </div>
       </div>
     </footer>

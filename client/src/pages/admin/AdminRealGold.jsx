@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit3, Trash2, X, Upload, Crown, ShieldCheck, Scale, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit3, Trash2, X, Upload, Crown, ShieldCheck, Scale } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
 import { uploadService } from '../../services/api';
 import { toast } from 'react-toastify';
@@ -15,20 +15,20 @@ export default function AdminRealGold() {
     title: '',
     category: categories[0]?.name || 'Necklace Sets',
     purity: '22K (916) BIS Hallmarked Gold',
-    weightInGrams: '45.0 grams',
+    weightInGrams: '',
     description: '',
-    images: ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1200&q=80']
+    images: []
   });
 
   const openCreateModal = () => {
     setEditId(null);
     setFormData({
-      title: 'Royal Heirloom 22K Hallmarked Gold Necklace',
+      title: '',
       category: categories[0]?.name || 'Necklace Sets',
       purity: '22K (916) BIS Hallmarked Gold',
-      weightInGrams: '58.5 grams',
-      description: 'Masterwork hand-carved in 22 Karat solid gold with official 916 BIS hallmark stamp. Showcase piece for showroom display.',
-      images: ['https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1200&q=80']
+      weightInGrams: '',
+      description: '',
+      images: []
     });
     setShowModal(true);
   };
@@ -36,12 +36,12 @@ export default function AdminRealGold() {
   const openEditModal = (item) => {
     setEditId(item.id);
     setFormData({
-      title: item.title,
-      category: item.category,
-      purity: item.purity || '22K (916) BIS Hallmarked Gold',
-      weightInGrams: item.weightInGrams || '45.0 grams',
+      title: item.title || '',
+      category: item.category || categories[0]?.name || 'Necklace Sets',
+      purity: '22K (916) BIS Hallmarked Gold',
+      weightInGrams: item.weightInGrams || '',
       description: item.description || '',
-      images: item.images?.length ? item.images : [item.image || '']
+      images: item.images?.length ? item.images : (item.image ? [item.image] : [])
     });
     setShowModal(true);
   };
@@ -59,9 +59,7 @@ export default function AdminRealGold() {
           ...prev,
           images: [...prev.images.filter(img => !img.includes('unsplash')), ...urls]
         }));
-        toast.success(`Uploaded ${urls.length} real gold image(s) to Cloudinary!`, {
-          style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' }
-        });
+        toast.success(`Uploaded ${urls.length} real gold image(s) to Cloudinary!`);
       }
     } catch (err) {
       toast.error('Device image upload failed');
@@ -72,12 +70,13 @@ export default function AdminRealGold() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.weightInGrams) return;
+    if (!formData.title.trim() || !formData.weightInGrams) {
+      toast.error('Please fill in Item Title and Weight in Grams');
+      return;
+    }
 
     await saveRealGoldItem(formData, editId);
-    toast.success(`Real Gold item ${editId ? 'updated' : 'added'} successfully!`, {
-      style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' }
-    });
+    toast.success(`Real Gold item ${editId ? 'updated' : 'added'} successfully!`);
     setShowModal(false);
   };
 
@@ -95,9 +94,9 @@ export default function AdminRealGold() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4">
         <div>
           <h2 className="font-luxury font-bold text-2xl text-gold-gradient flex items-center gap-2">
-            <Crown className="w-6 h-6 text-gold" /> Real 22K/24K Gold Showcase Manager
+            <Crown className="w-6 h-6 text-gold" /> Real 22K Solid Gold Showcase Manager
           </h2>
-          <p className="text-xs text-gray-500">Manage showroom original gold items with grams weight, purity tags, categories & multiple Cloudinary images (No online pricing)</p>
+          <p className="text-xs text-gray-500">Manage showroom original gold items with grams weight, fixed 22K (916) BIS Hallmarked Gold tag, & categories (No online pricing)</p>
         </div>
 
         <button
@@ -115,10 +114,14 @@ export default function AdminRealGold() {
             
             <div className="space-y-3">
               {/* Image Banner */}
-              <div className="aspect-square rounded-xl overflow-hidden relative border border-gold/30">
-                <img src={item.images?.[0]} alt="" className="w-full h-full object-cover" />
+              <div className="aspect-square rounded-xl overflow-hidden relative border border-gold/30 bg-amber-50">
+                <img 
+                  src={item.images?.[0] || item.image || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80"} 
+                  alt={item.title} 
+                  className="w-full h-full object-cover" 
+                />
                 <span className="absolute top-2 left-2 bg-slate-900 text-gold text-[10px] font-bold px-2.5 py-1 rounded-full shadow border border-gold/40 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-gold" /> {item.purity || "22K (916) Gold"}
+                  <ShieldCheck className="w-3.5 h-3.5 text-gold" /> 22K (916) BIS Hallmarked Gold
                 </span>
                 <span className="absolute bottom-2 right-2 bg-amber-50 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded shadow border border-gold/40 flex items-center gap-1">
                   <Scale className="w-3.5 h-3.5 text-gold" /> {item.weightInGrams}
@@ -143,7 +146,7 @@ export default function AdminRealGold() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => openEditModal(item)}
-                  className="p-2 bg-amber-50 text-amber-900 hover:bg-gold hover:text-slate-900 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                  className="p-2 bg-amber-50 text-amber-900 hover:bg-gold hover:text-slate-900 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors border border-gold/30"
                 >
                   <Edit3 className="w-3.5 h-3.5" /> Edit
                 </button>
@@ -160,28 +163,33 @@ export default function AdminRealGold() {
         ))}
       </div>
 
-      {/* CREATE & EDIT MODAL */}
+      {/* CREATE & EDIT MODAL WITH OUTSIDE BACKDROP CLICK CLOSE */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-gold/40 max-w-xl w-full p-6 rounded-2xl space-y-4 text-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+        >
+          <div className="bg-white border border-gold/40 max-w-xl w-full p-6 rounded-2xl space-y-4 text-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto relative">
             
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-luxury font-bold text-lg text-gold-gradient">
                 {editId ? 'Edit Real Gold Item' : 'Add Real Gold Showcase Item'}
               </h3>
-              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400 hover:text-slate-900" /></button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               
               <div>
-                <label className="block text-slate-700 font-bold mb-1">Item Title / Name</label>
+                <label className="block text-slate-700 font-bold mb-1">Item Title / Name *</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Imperial Antique 22K Hallmarked Gold Haram"
+                  placeholder="Enter Real Gold item name..."
                   className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg focus:border-gold"
                 />
               </div>
@@ -195,31 +203,31 @@ export default function AdminRealGold() {
                     className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg font-bold"
                   >
                     {categories.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
+                      <option key={c.id || c._id} value={c.name}>{c.name}</option>
                     ))}
                   </select>
                 </div>
 
+                {/* DISABLED FIXED GOLD PURITY TAG VALUE */}
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Gold Purity Tag</label>
+                  <label className="block text-slate-700 font-bold mb-1">Gold Purity Tag (Fixed)</label>
                   <input
                     type="text"
-                    required
-                    value={formData.purity}
-                    onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
-                    placeholder="e.g. 22K (916) BIS Hallmarked"
-                    className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg font-bold"
+                    disabled
+                    readOnly
+                    value="22K (916) BIS Hallmarked Gold"
+                    className="w-full bg-gray-100 border border-gray-300 text-gray-600 p-2.5 rounded-lg font-mono font-bold text-[11px] cursor-not-allowed"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Weight in Grams</label>
+                  <label className="block text-slate-700 font-bold mb-1">Weight in Grams *</label>
                   <input
                     type="text"
                     required
                     value={formData.weightInGrams}
                     onChange={(e) => setFormData({ ...formData, weightInGrams: e.target.value })}
-                    placeholder="e.g. 52.4 grams"
+                    placeholder="e.g. 45.0 grams"
                     className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg font-bold"
                   />
                 </div>
@@ -258,6 +266,7 @@ export default function AdminRealGold() {
                     type="text"
                     value={formData.images[0] || ''}
                     onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
+                    placeholder="Paste image URL..."
                     className="w-full bg-white border border-gray-300 text-slate-900 p-2 rounded-lg"
                   />
                 </div>
@@ -272,7 +281,7 @@ export default function AdminRealGold() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button type="submit" className="flex-1 bg-gold-gradient text-slate-900 font-bold p-3 rounded-lg">
+                <button type="submit" className="flex-1 bg-gold-gradient text-slate-900 font-bold p-3 rounded-lg shadow-gold-glow">
                   Save Real Gold Showcase Item
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 text-slate-700 font-bold p-3 rounded-lg">

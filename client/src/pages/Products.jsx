@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, SlidersHorizontal, Search, RotateCcw, AlertCircle } from 'lucide-react';
+import { SlidersHorizontal, Search, RotateCcw, AlertCircle } from 'lucide-react';
 import { productService, categoryService } from '../services/api';
 import ProductCard from '../components/common/ProductCard';
 import SkeletonCard from '../components/common/SkeletonCard';
@@ -29,10 +29,12 @@ export default function Products() {
           productService.getProducts(),
           categoryService.getCategories()
         ]);
-        setProducts(prods);
-        setCategories(cats);
+        setProducts(Array.isArray(prods) ? prods : []);
+        setCategories(Array.isArray(cats) ? cats : []);
       } catch (e) {
         console.error("Products load error", e);
+        setProducts([]);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -47,8 +49,10 @@ export default function Products() {
     if (srch !== null) setSearchQuery(srch);
   }, [searchParams]);
 
+  const safeProducts = Array.isArray(products) ? products : [];
+
   // Filter Logic
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = safeProducts.filter(p => {
     // Category match
     if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
     // Search match
@@ -82,10 +86,10 @@ export default function Products() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
       
       {/* Top Banner Notice */}
-      <div className="bg-amber-50 border border-gold/40 p-4 rounded-xl flex items-center gap-3 text-xs text-amber-900 shadow-sm">
+      <div className="bg-amber-50 border border-gold/40 p-3 sm:p-4 rounded-xl flex items-center gap-3 text-xs text-amber-900 shadow-sm">
         <AlertCircle className="w-5 h-5 text-gold shrink-0" />
         <div>
           <strong className="font-bold uppercase tracking-wider">1 Gram Jewellery Disclaimer:</strong> All items in this catalog feature high-luster 1 Gram gold micro-plating on brass/copper base metal. They are non-real gold imitation items.
@@ -93,23 +97,23 @@ export default function Products() {
       </div>
 
       {/* Page Title & Search Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4 sm:pb-6">
         <div>
-          <h1 className="font-luxury font-bold text-3xl text-onyx">1 Gram Jewellery Collection</h1>
+          <h1 className="font-luxury font-bold text-2xl sm:text-3xl text-slate-900">1 Gram Jewellery Collection</h1>
           <p className="text-xs text-gray-500 mt-1">
             Showing {filteredProducts.length} micro-gold plated replica pieces
           </p>
         </div>
 
         {/* Search & Sort Controls */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="relative flex-1 sm:flex-none">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter by name, SKU..."
-              className="bg-white border border-gray-300 text-xs rounded-lg py-2 pl-8 pr-3 text-onyx focus:outline-none focus:border-gold"
+              className="w-full bg-white border border-gray-300 text-xs rounded-lg py-2 pl-8 pr-3 text-slate-900 focus:outline-none focus:border-gold"
             />
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           </div>
@@ -117,7 +121,7 @@ export default function Products() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-white border border-gray-300 text-xs rounded-lg p-2 text-onyx font-medium focus:outline-none focus:border-gold"
+            className="bg-white border border-gray-300 text-xs rounded-lg p-2 text-slate-900 font-medium focus:outline-none focus:border-gold"
           >
             <option value="featured">Featured First</option>
             <option value="price-low">Price: Low to High</option>
@@ -128,12 +132,12 @@ export default function Products() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
         
         {/* Sidebar Filters */}
-        <aside className="space-y-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-fit">
+        <aside className="space-y-6 bg-white p-4 sm:p-6 rounded-2xl border border-gold/30 shadow-xs h-fit">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-            <h3 className="font-luxury font-bold text-base text-onyx flex items-center gap-2">
+            <h3 className="font-luxury font-bold text-base text-slate-900 flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4 text-gold" /> Filter Collection
             </h3>
             <button onClick={resetFilters} className="text-[11px] text-amber-700 hover:underline flex items-center gap-1 font-semibold">
@@ -141,14 +145,14 @@ export default function Products() {
             </button>
           </div>
 
-          {/* Categories */}
+          {/* Categories Filter Pills */}
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-onyx uppercase tracking-wider">Category</h4>
-            <div className="space-y-1">
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Category</h4>
+            <div className="space-y-1 max-h-48 lg:max-h-none overflow-y-auto">
               <button
                 onClick={() => setSelectedCategory('All')}
                 className={`w-full text-left text-xs py-1.5 px-2.5 rounded-lg transition-colors flex justify-between ${
-                  selectedCategory === 'All' ? 'bg-onyx text-gold font-bold' : 'text-gray-700 hover:bg-gray-100'
+                  selectedCategory === 'All' ? 'bg-slate-900 text-gold font-bold' : 'text-gray-700 hover:bg-amber-50'
                 }`}
               >
                 <span>All Categories</span>
@@ -158,10 +162,10 @@ export default function Products() {
                 const count = products.filter(p => p.category === cat.name).length;
                 return (
                   <button
-                    key={cat.id}
+                    key={cat.id || cat._id}
                     onClick={() => setSelectedCategory(cat.name)}
                     className={`w-full text-left text-xs py-1.5 px-2.5 rounded-lg transition-colors flex justify-between ${
-                      selectedCategory === cat.name ? 'bg-onyx text-gold font-bold' : 'text-gray-700 hover:bg-gray-100'
+                      selectedCategory === cat.name ? 'bg-slate-900 text-gold font-bold' : 'text-gray-700 hover:bg-amber-50'
                     }`}
                   >
                     <span>{cat.name}</span>
@@ -175,7 +179,7 @@ export default function Products() {
           {/* Price Range Slider */}
           <div className="space-y-2 pt-4 border-t border-gray-100">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-onyx uppercase tracking-wider">Max Price</span>
+              <span className="font-bold text-slate-900 uppercase tracking-wider">Max Price</span>
               <span className="font-bold text-amber-800">₹{maxPrice.toLocaleString()}</span>
             </div>
             <input
@@ -203,28 +207,28 @@ export default function Products() {
           </div>
         </aside>
 
-        {/* Product Cards Grid */}
+        {/* Product Cards Grid: 2 PER ROW ON MOBILE ALWAYS */}
         <main className="lg:col-span-3">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {filteredProducts.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl p-12 text-center border border-gray-200 space-y-4">
+            <div className="bg-white rounded-2xl p-8 sm:p-12 text-center border border-gold/30 space-y-4">
               <Search className="w-12 h-12 text-gray-300 mx-auto" />
-              <h3 className="font-luxury font-bold text-xl text-onyx">No 1-Gram Products Found</h3>
+              <h3 className="font-luxury font-bold text-xl text-slate-900">No 1-Gram Products Found</h3>
               <p className="text-xs text-gray-500 max-w-sm mx-auto">
                 Try relaxing your filter criteria or searching for different keywords like necklace, bangles, or earrings.
               </p>
               <button
                 onClick={resetFilters}
-                className="bg-gold text-onyx font-bold text-xs px-5 py-2.5 rounded-full hover:bg-amber-300 transition-colors"
+                className="bg-gold-gradient text-slate-900 font-bold text-xs px-5 py-2.5 rounded-full shadow-gold-glow hover:scale-105 transition-transform"
               >
                 Reset All Filters
               </button>

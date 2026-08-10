@@ -12,20 +12,22 @@ export default function AdminCategories() {
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
   const [uploading, setUploading] = useState(false);
+
   useEffect(() => {
-  console.log("Image state changed:", image);
-}, [image]);
+    console.log("Image state changed:", image);
+  }, [image]);
+
   const openCreateModal = () => {
     setEditId(null);
     setName('');
     setDescription('');
-    setImage('https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80');
+    setImage('');
     setShowModal(true);
   };
 
   const openEditModal = (cat) => {
     setEditId(cat.id);
-    setName(cat.name);
+    setName(cat.name || '');
     setDescription(cat.description || '');
     setImage(cat.image || '');
     setShowModal(true);
@@ -40,14 +42,8 @@ export default function AdminCategories() {
     try {
       const urls = await uploadService.uploadDeviceFiles(files);
       if (urls.length > 0) {
-          console.log("Cloudinary Response:", urls);
-
-  setImage(urls[0]);
-
-  console.log("Image after upload:", urls[0]);
-        toast.success('Category banner image uploaded to Cloudinary!', {
-          style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' }
-        });
+        setImage(urls[0]);
+        toast.success('Category banner image uploaded to Cloudinary!');
       }
     } catch (err) {
       toast.error('Device image upload failed');
@@ -58,14 +54,13 @@ export default function AdminCategories() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    console.log("Submitting Category:", {
-  name,
-  description,
-  image,
-});
+    if (!name.trim()) {
+      toast.error('Please enter a category name');
+      return;
+    }
+
     await saveCategory({ name, description, image }, editId);
-    toast.success(`Category ${editId ? 'updated' : 'added'}!`, { style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' } });
+    toast.success(`Category ${editId ? 'updated' : 'added'}!`);
     setShowModal(false);
   };
 
@@ -86,7 +81,7 @@ export default function AdminCategories() {
 
         <button
           onClick={openCreateModal}
-          className="bg-gold-gradient text-slate-900 font-luxury font-bold text-xs px-5 py-2.5 rounded-xl shadow-gold-glow flex items-center gap-2"
+          className="bg-gold-gradient text-slate-900 font-luxury font-bold text-xs px-5 py-2.5 rounded-xl shadow-gold-glow flex items-center gap-2 hover:scale-102 transition-transform"
         >
           <Plus className="w-4 h-4" /> Add Category
         </button>
@@ -94,23 +89,29 @@ export default function AdminCategories() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {categories.map(cat => (
-          <div key={cat.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm p-5 space-y-4">
-            <div className="aspect-video rounded-xl overflow-hidden relative border border-gold/20">
-              <img src={cat.image} alt="" className="w-full h-full object-cover" />
-              <span className="absolute top-2 left-2 bg-white/90 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded border border-gold/40 shadow">
-                1 Gram Polish
-              </span>
-            </div>
+          <div key={cat.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm p-5 space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="aspect-video rounded-xl overflow-hidden relative border border-gold/20 bg-amber-50">
+                <img 
+                  src={cat.image || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80"} 
+                  alt={cat.name} 
+                  className="w-full h-full object-cover" 
+                />
+                <span className="absolute top-2 left-2 bg-white/90 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded border border-gold/40 shadow">
+                  1 Gram Polish
+                </span>
+              </div>
 
-            <div>
-              <h3 className="font-luxury font-bold text-lg text-slate-900">{cat.name}</h3>
-              <p className="text-xs text-gray-500 line-clamp-2">{cat.description}</p>
+              <div>
+                <h3 className="font-luxury font-bold text-lg text-slate-900">{cat.name}</h3>
+                <p className="text-xs text-gray-500 line-clamp-2">{cat.description}</p>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
               <button
                 onClick={() => openEditModal(cat)}
-                className="p-1.5 bg-amber-50 text-amber-900 rounded hover:bg-gold hover:text-slate-900 transition-colors text-xs flex items-center gap-1 font-bold"
+                className="p-1.5 bg-amber-50 text-amber-900 rounded hover:bg-gold hover:text-slate-900 transition-colors text-xs flex items-center gap-1 font-bold border border-gold/30"
               >
                 <Edit3 className="w-3.5 h-3.5" /> Edit
               </button>
@@ -126,22 +127,28 @@ export default function AdminCategories() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-gold/40 max-w-md w-full p-6 rounded-2xl space-y-4 text-slate-800 shadow-2xl">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+        >
+          <div className="bg-white border border-gold/40 max-w-md w-full p-6 rounded-2xl space-y-4 text-slate-800 shadow-2xl relative">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-luxury font-bold text-lg text-gold-gradient">{editId ? 'Edit Category' : 'Add Category'}</h3>
-              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400 hover:text-slate-900" /></button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-700 font-bold mb-1">Category Name</label>
+                <label className="block text-slate-700 font-bold mb-1">Category Name *</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg"
+                  placeholder="Enter category name..."
+                  className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg focus:border-gold"
                 />
               </div>
 
@@ -151,7 +158,8 @@ export default function AdminCategories() {
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg"
+                  placeholder="Category description..."
+                  className="w-full bg-gray-50 border border-gray-300 text-slate-900 p-2.5 rounded-lg focus:border-gold"
                 />
               </div>
 
@@ -176,6 +184,7 @@ export default function AdminCategories() {
                     type="text"
                     value={image}
                     onChange={(e) => setImage(e.target.value)}
+                    placeholder="Paste banner image URL..."
                     className="w-full bg-white border border-gray-300 text-slate-900 p-2 rounded-lg"
                   />
                 </div>
@@ -188,8 +197,12 @@ export default function AdminCategories() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button type="submit" className="flex-1 bg-gold-gradient text-slate-900 font-bold p-3 rounded-lg">Save Category</button>
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 text-slate-700 font-bold p-3 rounded-lg">Cancel</button>
+                <button type="submit" className="flex-1 bg-gold-gradient text-slate-900 font-bold p-3 rounded-lg shadow-gold-glow">
+                  Save Category
+                </button>
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 text-slate-700 font-bold p-3 rounded-lg">
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
