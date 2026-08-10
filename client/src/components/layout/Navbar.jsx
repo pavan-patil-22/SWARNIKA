@@ -5,6 +5,7 @@ import {
   ShoppingBag, 
   Heart, 
   User, 
+  UserPlus,
   Crown, 
   LogOut, 
   Package, 
@@ -83,26 +84,26 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gold/30 shadow-sm">
       
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 sm:h-28 gap-3 xl:gap-6 py-2">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20 sm:h-28 gap-1.5 sm:gap-4 py-2">
           
           {/* Left: Prominent Large Logo & Royal Brand Typography */}
-          <Link to="/" className="flex items-center gap-3.5 shrink-0 group">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3.5 shrink min-w-0 group">
             {/* Prominent Large Shop Logo */}
             <img 
               src="/shoplogo.png" 
               alt="SWARNIKA Logo" 
-              className="h-16 sm:h-20 lg:h-22 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              className="h-12 sm:h-20 lg:h-22 w-auto object-contain transition-transform duration-300 group-hover:scale-105 shrink-0"
               onError={(e) => {
                 e.target.onerror = null;
               }}
             />
 
             <div className="shrink-0 leading-tight">
-              <span className="font-brand-royal font-black text-2xl sm:text-3xl lg:text-4xl text-gold-royal tracking-[0.12em] block uppercase whitespace-nowrap drop-shadow-xs">
+              <span className="font-brand-royal font-black text-lg sm:text-3xl lg:text-4xl text-gold-royal tracking-[0.06em] sm:tracking-[0.12em] block uppercase whitespace-nowrap drop-shadow-xs">
                 SWARNIKA
               </span>
-              <span className="text-[10px] sm:text-xs text-amber-900 font-extrabold tracking-[0.3em] uppercase block mt-1 whitespace-nowrap opacity-90">
+              <span className="text-[8px] sm:text-xs text-amber-900 font-extrabold tracking-[0.18em] sm:tracking-[0.3em] uppercase block mt-0.5 whitespace-nowrap opacity-90">
                 LUXURY HERITAGE
               </span>
             </div>
@@ -202,10 +203,10 @@ export default function Navbar() {
           </div>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="relative p-2 text-slate-700 hover:text-gold transition-colors shrink-0">
+            <Link to="/wishlist" className="relative p-1.5 text-slate-700 hover:text-gold transition-colors shrink-0">
               <Heart className="w-5 h-5" />
               {wishlistCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-gold text-slate-900 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
@@ -215,7 +216,7 @@ export default function Navbar() {
             </Link>
 
             {/* Cart Drawer Button */}
-            <Link to="/cart" className="relative p-2 text-slate-700 hover:text-gold transition-colors shrink-0">
+            <Link to="/cart" className="relative p-1.5 text-slate-700 hover:text-gold transition-colors shrink-0">
               <ShoppingBag className="w-5 h-5" />
               {totalItemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-gold text-slate-900 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-bounce">
@@ -224,14 +225,14 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Auth Menu / Profile Button */}
+            {/* Auth Menu / Profile / Sign In Buttons */}
             {isAuthenticated ? (
               <div className="relative shrink-0">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-full hover:bg-amber-50 transition-colors border border-gold/30"
+                  className="flex items-center gap-1 p-1 rounded-full hover:bg-amber-50 transition-colors border border-gold/30"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gold-gradient text-slate-900 font-bold text-xs flex items-center justify-center">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gold-gradient text-slate-900 font-bold text-xs flex items-center justify-center shadow-xs">
                     {user.name?.charAt(0) || 'U'}
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-gray-500 hidden sm:block" />
@@ -259,7 +260,15 @@ export default function Navbar() {
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center gap-2 px-4 py-2.5 hover:bg-amber-50"
                     >
-                      <Package className="w-4 h-4 text-gold" /> My Orders & Returns
+                      <Package className="w-4 h-4 text-gold" /> My Orders & Tracking
+                    </Link>
+
+                    <Link
+                      to="/profile"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 hover:bg-amber-50"
+                    >
+                      <User className="w-4 h-4 text-gold" /> Account Profile
                     </Link>
 
                     <Link
@@ -283,19 +292,30 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="bg-gold-gradient text-slate-900 font-luxury font-bold text-xs px-4 py-2.5 rounded-full shadow-gold-glow hover:scale-105 transition-transform hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
-              >
-                <User className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">Sign In</span>
-              </Link>
+              <div className="hidden lg:flex items-center gap-1.5 shrink-0">
+                <Link
+                  to="/login"
+                  className="bg-gold-gradient text-slate-900 font-luxury font-bold text-[11px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-full shadow-gold-glow hover:scale-105 transition-transform flex items-center gap-1 whitespace-nowrap shrink-0"
+                >
+                  <User className="w-3.5 h-3.5 shrink-0" />
+                  <span className="whitespace-nowrap">Sign In</span>
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="bg-slate-900 text-gold border border-gold/40 font-luxury font-bold text-[11px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-full hover:bg-slate-800 transition-all hidden xs:flex items-center gap-1 whitespace-nowrap shrink-0"
+                >
+                  <UserPlus className="w-3.5 h-3.5 text-gold shrink-0" />
+                  <span className="whitespace-nowrap">Register</span>
+                </Link>
+              </div>
             )}
 
             {/* Mobile Hamburger Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-slate-700 hover:text-gold shrink-0"
+              className="lg:hidden p-1.5 text-slate-700 hover:text-gold shrink-0"
+              aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -307,23 +327,39 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-gold/30 px-4 py-4 space-y-3 text-sm font-semibold text-slate-800 shadow-xl">
-          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block py-2">Home</Link>
-          <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="block py-2">1-Gram Jewellery</Link>
-          <Link to="/real-gold" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-amber-900 font-bold flex items-center gap-1">
+        <div className="lg:hidden bg-white border-b border-gold/30 px-4 py-4 space-y-3 text-sm font-semibold text-slate-800 shadow-2xl animate-fadeIn">
+          
+          {!isAuthenticated && (
+            <div className="pb-3 border-b border-gray-100 flex items-center gap-2">
+              <Link 
+                to="/login" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 bg-gold-gradient text-slate-900 font-luxury font-bold text-xs py-2.5 rounded-full text-center shadow-gold-glow flex items-center justify-center gap-1.5"
+              >
+                <User className="w-3.5 h-3.5" /> Sign In
+              </Link>
+
+              <Link 
+                to="/register" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 bg-slate-900 text-gold border border-gold/40 font-luxury font-bold text-xs py-2.5 rounded-full text-center flex items-center justify-center gap-1.5"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-gold" /> Register
+              </Link>
+            </div>
+          )}
+
+          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block py-2 hover:text-gold transition-colors">Home</Link>
+          <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="block py-2 hover:text-gold transition-colors">1-Gram Jewellery</Link>
+          <Link to="/real-gold" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-amber-900 font-bold flex items-center gap-1.5">
             <Crown className="w-4 h-4 text-gold" /> Real 22K Gold Showcase
           </Link>
-          <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="block py-2">Categories</Link>
-          <Link to="/offers" onClick={() => setMobileMenuOpen(false)} className="block py-2 flex items-center gap-1">
-            <Sparkles className="w-4 h-4 text-gold" /> Offers
+          <Link to="/categories" onClick={() => setMobileMenuOpen(false)} className="block py-2 hover:text-gold transition-colors">Categories</Link>
+          <Link to="/offers" onClick={() => setMobileMenuOpen(false)} className="block py-2 flex items-center gap-1.5 hover:text-gold transition-colors">
+            <Sparkles className="w-4 h-4 text-gold" /> Offers & Discounts
           </Link>
-          <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="block py-2">About Us</Link>
-          <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block py-2">Contact</Link>
-          {!isAuthenticated && (
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-gold font-bold">
-              Sign In / Register
-            </Link>
-          )}
+          <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="block py-2 hover:text-gold transition-colors">About Us</Link>
+          <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="block py-2 hover:text-gold transition-colors">Contact</Link>
         </div>
       )}
 

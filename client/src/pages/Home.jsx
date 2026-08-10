@@ -257,23 +257,37 @@ export default function Home() {
               </div>
             ))}
 
-            {/* LIGHTWEIGHT SUBTLE CAROUSEL NAVIGATION BUTTONS */}
+            {/* CAROUSEL NAVIGATION DOTS & DESKTOP ARROWS */}
             {banners.length > 1 && (
               <>
                 <button
                   onClick={() => setCurrentBanner((currentBanner - 1 + banners.length) % banners.length)}
-                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/70 hover:bg-white text-slate-600 hover:text-gold border border-gold/30 rounded-full opacity-70 hover:opacity-100 backdrop-blur-xs transition-all shadow-xs"
+                  className="hidden sm:flex absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/80 hover:bg-white text-slate-700 hover:text-gold border border-gold/40 rounded-full shadow-md transition-all"
                   aria-label="Previous Banner"
                 >
-                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setCurrentBanner((currentBanner + 1) % banners.length)}
-                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/70 hover:bg-white text-slate-600 hover:text-gold border border-gold/30 rounded-full opacity-70 hover:opacity-100 backdrop-blur-xs transition-all shadow-xs"
+                  className="hidden sm:flex absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 p-2 bg-white/80 hover:bg-white text-slate-700 hover:text-gold border border-gold/40 rounded-full shadow-md transition-all"
                   aria-label="Next Banner"
                 >
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ChevronRight className="w-5 h-5" />
                 </button>
+
+                {/* Mobile & Tablet Bottom Dot Indicators */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5">
+                  {banners.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentBanner(i)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === currentBanner ? 'w-5 bg-gold' : 'w-1.5 bg-gray-300'
+                      }`}
+                      aria-label={`Slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
               </>
             )}
 
