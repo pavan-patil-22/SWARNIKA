@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   ShoppingBag, 
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { offerService } from '../services/api';
 
 export default function Cart() {
   const { 
@@ -37,6 +38,19 @@ export default function Cart() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState('');
+  const [availableOffers, setAvailableOffers] = useState([]);
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const offers = await offerService.getOffers();
+        setAvailableOffers(Array.isArray(offers) ? offers : []);
+      } catch (err) {
+        console.error("Cart offers load error", err);
+      }
+    };
+    fetchOffers();
+  }, []);
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
@@ -98,56 +112,63 @@ export default function Cart() {
           {/* Cart Table List */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden divide-y divide-gray-100">
             {cartItems.map((item) => (
-              <div key={item.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div key={item.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-4">
                 
-                {/* Clickable Item Link -> Navigates to Product Page */}
-                <Link to={`/products/${item.id}`} className="flex items-center gap-4 group cursor-pointer">
-                  <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl border border-gold/30 shrink-0 group-hover:scale-105 transition-transform" />
-                  <div>
-                    <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">1 Gram Micro Polish</span>
-                    <h3 className="font-luxury font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-gold transition-colors">{item.name}</h3>
-                    <span className="text-[10px] text-gray-500 font-mono">SKU: {item.sku}</span>
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className="font-luxury font-bold text-gold text-sm">₹{item.price.toLocaleString()}</span>
-                      {item.originalPrice > item.price && (
-                        <span className="text-[11px] text-gray-400 line-through">₹{item.originalPrice.toLocaleString()}</span>
-                      )}
-                    </div>
-                  </div>
+                {/* Product Image */}
+                <Link to={`/products/${item.id}`} className="shrink-0">
+                  <img
+                    src={item.image || (item.images && item.images[0])}
+                    alt={item.name}
+                    className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl border border-gold/30 hover:scale-105 transition-transform"
+                  />
                 </Link>
 
-                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-gray-100">
-                  
-                  {/* Quantity Controls */}
-                  <div className="flex items-center border border-gold/40 rounded-lg bg-amber-50">
+                {/* Details */}
+                <div className="flex-1 text-center sm:text-left space-y-1">
+                  <span className="text-[10px] bg-amber-50 text-amber-900 border border-gold/30 px-2 py-0.5 rounded font-bold uppercase">
+                    {item.category || '1-Gram Jewellery'}
+                  </span>
+                  <h3 className="font-luxury font-bold text-sm text-slate-900">
+                    <Link to={`/products/${item.id}`} className="hover:text-gold transition-colors">
+                      {item.name}
+                    </Link>
+                  </h3>
+                  <p className="text-xs text-gray-500 font-mono">SKU: {item.sku || '1G-ITEM'}</p>
+                  <p className="text-xs text-emerald-700 font-bold">1 Gram Micro-Gold Plated Polish</p>
+                </div>
+
+                {/* Quantity Controls */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center border border-gray-300 rounded-full bg-gray-50">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="p-1.5 text-slate-700 hover:text-gold"
+                      className="p-1.5 text-gray-600 hover:text-slate-900 transition-colors"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="px-3 text-xs font-bold text-slate-900">{item.quantity}</span>
+                    <span className="w-8 text-center text-xs font-bold font-mono">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="p-1.5 text-slate-700 hover:text-gold"
+                      className="p-1.5 text-gray-600 hover:text-slate-900 transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
+                </div>
 
-                  {/* Subtotal Item Price */}
-                  <div className="text-right">
-                    <span className="font-luxury font-bold text-slate-900 text-sm block">
-                      ₹{(item.price * item.quantity).toLocaleString()}
-                    </span>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="text-[10px] text-rose-600 hover:underline flex items-center gap-0.5 justify-end mt-1"
-                    >
-                      <Trash2 className="w-3 h-3" /> Remove
-                    </button>
-                  </div>
+                {/* Price & Remove */}
+                <div className="text-center sm:text-right shrink-0">
+                  <span className="font-luxury font-bold text-base text-gold-gradient block">
+                    ₹{(item.price * item.quantity).toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-gray-400 block">₹{item.price} each</span>
 
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="mt-2 text-rose-500 hover:text-rose-700 p-1 text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Remove
+                  </button>
                 </div>
 
               </div>
@@ -156,17 +177,58 @@ export default function Cart() {
 
         </div>
 
-        {/* Right Column: Order Summary Card */}
+        {/* Right Column: Order Summary & Dynamic Offers */}
         <div className="space-y-6">
           
-          <div className="bg-white p-6 rounded-2xl border border-gold/40 shadow-md space-y-6">
-            <h3 className="font-luxury font-bold text-lg text-slate-900 border-b border-gray-100 pb-3">
-              Order Total Calculation
-            </h3>
+          {/* DYNAMIC AVAILABLE STORE OFFERS & COUPONS */}
+          {availableOffers.length > 0 && (
+            <div className="p-4 bg-amber-50/70 border border-gold/40 rounded-2xl space-y-3 shadow-sm">
+              <div className="flex items-center gap-1.5 text-xs font-luxury font-bold text-amber-900">
+                <Sparkles className="w-4 h-4 text-gold shrink-0" /> Available Dynamic Offers & Coupons
+              </div>
+              <div className="space-y-2 text-xs">
+                {availableOffers.map((off) => {
+                  const code = off.code || off.couponCode || 'FESTIVE10';
+                  const isApplied = appliedCoupon === code;
 
-            {/* Coupon Code Section */}
+                  return (
+                    <div key={off.id || code} className="bg-white p-2.5 rounded-xl border border-gold/30 flex items-center justify-between gap-2 shadow-xs">
+                      <div>
+                        <span className="font-mono font-bold text-gold bg-slate-900 text-[10px] px-2 py-0.5 rounded tracking-wider">
+                          {code}
+                        </span>
+                        <p className="text-[10px] text-gray-600 font-medium mt-1 line-clamp-1">{off.description || off.title || 'Special discount offer'}</p>
+                      </div>
+                      {isApplied ? (
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300">
+                          Applied ✓
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => applyCouponCode(code)}
+                          className="text-[10px] bg-gold-gradient text-slate-900 font-luxury font-bold px-3 py-1 rounded-full hover:scale-105 transition-transform shadow-xs shrink-0"
+                        >
+                          Apply Coupon
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Order Summary Box */}
+          <div className="bg-white p-6 rounded-2xl border border-gold/30 shadow-sm space-y-5">
+            <h2 className="font-luxury font-bold text-lg text-slate-900 border-b border-gray-100 pb-3">
+              Order Summary
+            </h2>
+
+            {/* Coupon Input Form */}
             <form onSubmit={handleApplyCoupon} className="space-y-2">
-              <label className="block text-xs font-bold text-gray-700">Have a Promo Coupon?</label>
+              <label className="block text-xs font-bold text-slate-700">Promo / Coupon Code</label>
+
               {appliedCoupon ? (
                 <div className="p-2.5 bg-amber-50 border border-gold/40 rounded-xl flex items-center justify-between text-xs">
                   <span className="font-bold text-amber-900 flex items-center gap-1">
@@ -187,7 +249,7 @@ export default function Cart() {
                   />
                   <button
                     type="submit"
-                    className="bg-amber-100 hover:bg-gold hover:text-slate-900 text-amber-900 text-xs font-bold px-4 rounded-xl transition-colors border border-gold/40"
+                    className="bg-amber-100 hover:bg-gold hover:text-slate-900 text-amber-900 text-xs font-bold px-4 rounded-xl transition-colors border border-gold/40 shrink-0"
                   >
                     Apply
                   </button>

@@ -122,7 +122,7 @@ export default function Login() {
         <div className="text-center space-y-2">
           {/* Prominent Large Clean Logo */}
           <img 
-            src="/logoshop.png" 
+            src="/shoplogo.png" 
             alt="SWARNIKA Logo" 
             className="h-20 sm:h-24 w-auto mx-auto object-contain"
             onError={(e) => {

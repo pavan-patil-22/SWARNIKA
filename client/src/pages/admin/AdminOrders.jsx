@@ -214,7 +214,11 @@ export default function AdminOrders() {
                     <span className="text-amber-900 font-bold flex items-center gap-1.5">
                       <MapPin className="w-4 h-4 text-gold" /> Delivery Address:
                     </span>
-                    <p className="text-slate-700 line-clamp-2">{order.shippingAddress}</p>
+                    <p className="text-slate-700 line-clamp-2">
+                      {typeof order.shippingAddress === 'object' && order.shippingAddress !== null
+                        ? `${order.shippingAddress.street || ''}, ${order.shippingAddress.city || ''} ${order.shippingAddress.state || ''} - ${order.shippingAddress.pincode || ''}`
+                        : (order.shippingAddress || 'N/A')}
+                    </p>
                   </div>
                 </div>
 

@@ -50,20 +50,20 @@ export default function AdminLayout() {
   const todayStr = new Date().toISOString().split('T')[0];
   const isGoldUpdatedToday = settings?.goldRateLastUpdated === todayStr;
 
+  const [hasInitializedGoldModal, setHasInitializedGoldModal] = useState(false);
+
   useEffect(() => {
-    if (settings) {
+    if (settings && !hasInitializedGoldModal) {
       if (settings.goldRate22K) setGold22K(settings.goldRate22K);
       if (settings.goldRate24K) setGold24K(settings.goldRate24K);
       if (settings.goldRate18K) setGold18K(settings.goldRate18K);
 
-      // Check if gold rate has been updated today
       if (settings.goldRateLastUpdated !== todayStr) {
         setShowGoldRateModal(true);
-      } else {
-        setShowGoldRateModal(false);
       }
+      setHasInitializedGoldModal(true);
     }
-  }, [settings, todayStr]);
+  }, [settings, todayStr, hasInitializedGoldModal]);
 
   if (!user || !isAdmin) {
     return <Navigate to="/login" state={{ redirect: '/admin' }} replace />;
@@ -346,7 +346,7 @@ export default function AdminLayout() {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gold/30 sticky top-0 h-screen z-30 shadow-sm">
+      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gold/30 sticky top-0 h-screen overflow-y-auto shrink-0 z-30 shadow-sm">
         
         {/* Header */}
         <div className="p-5 border-b border-gray-100 flex items-center gap-3">

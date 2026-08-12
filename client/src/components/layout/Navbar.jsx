@@ -84,33 +84,33 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gold/30 shadow-sm">
       
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 sm:h-28 gap-1.5 sm:gap-4 py-2">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20 sm:h-24 lg:h-28 gap-2 lg:gap-4 xl:gap-6 py-2">
           
-          {/* Left: Prominent Large Logo & Royal Brand Typography */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3.5 shrink min-w-0 group">
-            {/* Prominent Large Shop Logo */}
+          {/* Left: Prominent Logo & Royal Brand Typography (Proportional Desktop Sizing) */}
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group">
+            {/* Shop Logo */}
             <img 
               src="/shoplogo.png" 
               alt="SWARNIKA Logo" 
-              className="h-12 sm:h-20 lg:h-22 w-auto object-contain transition-transform duration-300 group-hover:scale-105 shrink-0"
+              className="h-10 sm:h-14 lg:h-16 xl:h-18 w-auto object-contain transition-transform duration-300 group-hover:scale-105 shrink-0"
               onError={(e) => {
                 e.target.onerror = null;
               }}
             />
 
             <div className="shrink-0 leading-tight">
-              <span className="font-brand-royal font-black text-lg sm:text-3xl lg:text-4xl text-gold-royal tracking-[0.06em] sm:tracking-[0.12em] block uppercase whitespace-nowrap drop-shadow-xs">
+              <span className="font-brand-royal font-black text-lg sm:text-2xl lg:text-3xl xl:text-4xl text-gold-royal tracking-[0.05em] sm:tracking-[0.1em] block uppercase whitespace-nowrap drop-shadow-xs">
                 SWARNIKA
               </span>
-              <span className="text-[8px] sm:text-xs text-amber-900 font-extrabold tracking-[0.18em] sm:tracking-[0.3em] uppercase block mt-0.5 whitespace-nowrap opacity-90">
+              <span className="text-[8px] sm:text-[10px] lg:text-xs text-amber-900 font-extrabold tracking-[0.18em] sm:tracking-[0.25em] uppercase block mt-0.5 whitespace-nowrap opacity-90">
                 LUXURY HERITAGE
               </span>
             </div>
           </Link>
 
           {/* Middle: Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-3 xl:gap-5 text-xs xl:text-sm font-bold text-slate-700 shrink-0">
+          <nav className="hidden lg:flex items-center gap-2.5 xl:gap-5 text-xs xl:text-sm font-bold text-slate-700 shrink-0">
             <Link 
               to="/" 
               className={`hover:text-gold transition-colors whitespace-nowrap ${location.pathname === '/' ? 'text-gold' : ''}`}
@@ -128,7 +128,7 @@ export default function Navbar() {
             {/* Real 22K Gold Showcase Badge Link */}
             <Link 
               to="/real-gold" 
-              className="bg-amber-50 hover:bg-gold hover:text-slate-900 text-amber-900 border border-gold/40 text-xs px-3.5 py-2 rounded-full font-luxury font-bold flex items-center gap-1.5 transition-all shadow-xs whitespace-nowrap shrink-0"
+              className="bg-amber-50 hover:bg-gold hover:text-slate-900 text-amber-900 border border-gold/40 text-xs px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-full font-luxury font-bold flex items-center gap-1.5 transition-all shadow-xs whitespace-nowrap shrink-0"
             >
               <Crown className="w-3.5 h-3.5 text-gold shrink-0" />
               <span className="whitespace-nowrap">Real 22K Gold</span>
@@ -165,7 +165,7 @@ export default function Navbar() {
           </nav>
 
           {/* Live Search Bar */}
-          <div ref={searchRef} className="relative hidden md:block flex-1 max-w-[160px] lg:max-w-[200px] xl:max-w-[280px]">
+          <div ref={searchRef} className="relative hidden xl:block flex-1 max-w-[180px] xl:max-w-[240px]">
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
                 type="text"
@@ -173,9 +173,9 @@ export default function Navbar() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery.trim().length > 1 && setShowSuggestions(true)}
                 placeholder="Search SWARNIKA gold..."
-                className="w-full bg-amber-50/50 text-slate-900 placeholder-gray-400 text-xs rounded-full py-2.5 pl-9 pr-3 border border-gold/30 focus:outline-none focus:border-gold transition-colors"
+                className="w-full bg-amber-50/50 text-slate-900 placeholder-gray-400 text-xs rounded-full py-2 pl-8 pr-3 border border-gold/30 focus:outline-none focus:border-gold transition-colors"
               />
-              <Search className="w-4 h-4 text-gold absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-gold absolute left-2.5 top-1/2 -translate-y-1/2" />
             </form>
 
             {/* Dropdown Live Suggestions */}
