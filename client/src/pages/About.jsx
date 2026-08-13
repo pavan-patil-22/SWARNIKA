@@ -7,7 +7,7 @@ export default function About() {
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto space-y-4">
         <Crown className="w-12 h-12 text-gold mx-auto" />
-        <h1 className="font-luxury font-bold text-4xl text-onyx">About Aureate Luxe</h1>
+        <h1 className="font-luxury font-bold text-4xl text-onyx">About Swarnika </h1>
         <p className="text-sm text-gray-600 leading-relaxed">
           Crafting India's finest <strong>1 Gram Micro-Gold Plated Imitation Jewellery</strong> for women who desire royal elegance without compromising on quality or budget.
         </p>

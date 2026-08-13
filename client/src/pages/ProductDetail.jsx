@@ -9,7 +9,9 @@ import {
   ShieldCheck, 
   Sparkles, 
   Crown,
-  ChevronRight
+  ChevronRight,
+  Share2,
+  Check
 } from 'lucide-react';
 import { productService, settingService } from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -27,6 +29,8 @@ export default function ProductDetail() {
 
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
+  const [selectedColor, setSelectedColor] = useState('Yellow Gold');
+  const [copiedLink, setCopiedLink] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [returnDays, setReturnDays] = useState(7);
   const [loading, setLoading] = useState(true);
@@ -42,6 +46,9 @@ export default function ProductDetail() {
           setProduct(prod);
           const initialImg = prod.images?.[0] || prod.image;
           setSelectedImage(initialImg);
+          if (prod.colors?.length > 0) {
+            setSelectedColor(prod.colors[0]);
+          }
         }
         if (sets && sets.returnPolicyDays) {
           setReturnDays(sets.returnPolicyDays);
@@ -70,12 +77,12 @@ export default function ProductDetail() {
 
   const isFavorited = isInWishlist(product.id);
   const imagesList = product.images?.length > 0 ? product.images : [product.image];
+  const availableColors = product.colors?.length > 0 ? product.colors : ['Yellow Gold', 'Rose Gold'];
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    toast.success(`Added ${quantity} item(s) to shopping bag!`, {
-      icon: '✨'
-    });
+    const itemToCart = { ...product, selectedColor };
+    addToCart(itemToCart, quantity);
+    toast.success(`Added ${quantity} item(s) (${selectedColor}) to shopping bag!`);
   };
 
   const handleQuickBuy = () => {
@@ -84,45 +91,66 @@ export default function ProductDetail() {
       navigate('/login', { state: { redirect: '/checkout' } });
       return;
     }
-    addToCart(product, quantity);
+    const itemToCart = { ...product, selectedColor };
+    addToCart(itemToCart, quantity);
     navigate('/checkout');
+  };
+
+  const handleShareProductLink = () => {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedLink(true);
+    toast.success('Single product link copied to clipboard!');
+    setTimeout(() => setCopiedLink(false), 3000);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 bg-[#FAF9F5] text-slate-800">
       
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-gray-500">
-        <Link to="/" className="hover:text-gold">Home</Link>
-        <ChevronRight className="w-3 h-3" />
-        <Link to="/products" className="hover:text-gold">Catalogue</Link>
-        <ChevronRight className="w-3 h-3" />
-        <span className="text-slate-900 font-bold truncate">{product.name}</span>
-      </nav>
+      {/* Breadcrumb & Share Button Bar */}
+      <div className="flex items-center justify-between">
+        <nav className="flex items-center gap-2 text-xs text-gray-500">
+          <Link to="/" className="hover:text-gold">Home</Link>
+          <ChevronRight className="w-3 h-3" />
+          <Link to="/products" className="hover:text-gold">Catalogue</Link>
+          <ChevronRight className="w-3 h-3" />
+          <span className="text-slate-900 font-bold truncate">{product.name}</span>
+        </nav>
+
+        {/* Share Single Product Link */}
+        <button
+          onClick={handleShareProductLink}
+          className="bg-amber-50 border border-gold/40 text-amber-900 hover:bg-gold hover:text-slate-900 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+        >
+          {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-gold" />}
+          <span>{copiedLink ? 'Link Copied!' : 'Share Product Link'}</span>
+        </button>
+      </div>
 
       {/* Product Hero Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         
         {/* Left: Product Images Gallery */}
         <div className="space-y-4">
-          <div className="aspect-square bg-white rounded-2xl border border-gold/30 p-4 shadow-sm relative overflow-hidden flex items-center justify-center">
+          <div className="aspect-square bg-white rounded-3xl border border-gold/30 p-4 shadow-sm relative overflow-hidden flex items-center justify-center">
             <img src={selectedImage} alt={product.name} className="w-full h-full object-contain hover:scale-105 transition-transform duration-300" />
             <span className="absolute top-4 left-4 bg-amber-100 text-amber-900 border border-gold/40 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow">
               1 Gram Gold Polish
             </span>
           </div>
 
+          {/* Multi-Image Gallery Thumbnails */}
           {imagesList.length > 1 && (
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-2">
               {imagesList.map((imgUrl, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(imgUrl)}
-                  className={`aspect-square rounded-xl overflow-hidden border-2 p-1 bg-white transition-all ${
-                    selectedImage === imgUrl ? 'border-gold shadow-gold-glow scale-105' : 'border-gray-200'
+                  className={`aspect-square rounded-2xl overflow-hidden border-2 p-1 bg-white transition-all ${
+                    selectedImage === imgUrl ? 'border-gold shadow-gold-glow scale-105' : 'border-gray-200 opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={imgUrl} alt="" className="w-full h-full object-cover rounded-xl" />
                 </button>
               ))}
             </div>
@@ -132,7 +160,7 @@ export default function ProductDetail() {
         {/* Right: Product Specification & Actions */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <span className="text-xs font-bold text-amber-800 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full border border-gold/30">
+            <span className="text-xs font-bold text-amber-900 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full border border-gold/30">
               Category: {product.category}
             </span>
             <h1 className="font-luxury font-bold text-2xl sm:text-4xl text-slate-900 leading-tight">
@@ -165,6 +193,33 @@ export default function ProductDetail() {
             <p className="text-[11px] text-amber-900 font-bold">
               * Non-real gold: 1 Gram micro-gold electroplated brass/copper alloy item.
             </p>
+          </div>
+
+          {/* COLOUR VARIANTS SELECTOR */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-800">
+              Available Colour Variant: <span className="text-gold font-luxury">{selectedColor}</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {availableColors.map((col, idx) => {
+                const isSelected = selectedColor === col;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedColor(col)}
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-slate-900 text-gold border-2 border-gold shadow-sm scale-105'
+                        : 'bg-white border border-gray-300 text-slate-700 hover:border-gold'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-gold inline-block" />
+                    {col} {isSelected && '✓'}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Product Description */}
@@ -223,20 +278,20 @@ export default function ProductDetail() {
           </div>
 
           {/* Delivery & Assurance Cards */}
-          <div className="grid grid-cols-2 gap-3 pt-4 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs pt-2">
             <div className="p-3 bg-white rounded-xl border border-gray-200 flex items-center gap-2.5">
               <Truck className="w-5 h-5 text-gold shrink-0" />
               <div>
-                <strong className="block text-slate-900 text-[11px]">Free COD Shipping</strong>
-                <span className="text-[10px] text-gray-500">Across India</span>
+                <strong className="block text-slate-900">Express Delivery</strong>
+                <span className="text-[10px] text-gray-500">Shipped in 24-48 hrs</span>
               </div>
             </div>
 
             <div className="p-3 bg-white rounded-xl border border-gray-200 flex items-center gap-2.5">
               <RotateCcw className="w-5 h-5 text-gold shrink-0" />
               <div>
-                <strong className="block text-slate-900 text-[11px]">{returnDays} Days Easy Returns</strong>
-                <span className="text-[10px] text-gray-500">Hassle-free policy</span>
+                <strong className="block text-slate-900">{returnDays}-Day Easy Returns</strong>
+                <span className="text-[10px] text-gray-500">Tamper-proof box policy</span>
               </div>
             </div>
           </div>
@@ -245,47 +300,8 @@ export default function ProductDetail() {
 
       </div>
 
-      {/* JEWELLERY CARE GUIDE COMPONENT */}
+      {/* Jewellery Care Guide Section */}
       <JewelleryCareGuide />
-
-      {/* CUSTOMER REVIEWS (SHOWN ONLY IF REVIEWS ARE AVAILABLE) */}
-      {product.reviews && product.reviews.length > 0 && (
-        <section className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
-          <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
-            <div>
-              <h3 className="font-luxury font-bold text-xl text-slate-900">Verified Buyer Reviews</h3>
-              <p className="text-xs text-gray-500">Feedback submitted by customers after order delivery</p>
-            </div>
-            <span className="text-xs font-bold text-gold bg-amber-50 px-3 py-1 rounded-full border border-gold/30">
-              ★ {product.rating} / 5.0 Rating
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            {product.reviews.map((rev, index) => (
-              <div key={index} className="p-4 rounded-xl bg-amber-50/40 border border-gold/20 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <strong className="text-slate-900 text-xs">{rev.userName}</strong>
-                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase">
-                      Verified Buyer
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-gray-400">{rev.date}</span>
-                </div>
-
-                <div className="flex items-center text-amber-400">
-                  {Array.from({ length: rev.rating }).map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
-                  ))}
-                </div>
-
-                <p className="text-xs text-slate-700 italic">"{rev.comment}"</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
     </div>
   );

@@ -85,14 +85,30 @@ export default function ProductCard({ product }) {
         )}
       </div>
 
-      {/* Wishlist Button */}
-      <button
-        onClick={handleWishlist}
-        aria-label="Add to Wishlist"
-        className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-700 hover:text-rose-600 shadow border border-amber-900/10 transition-transform active:scale-95"
-      >
-        <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
-      </button>
+      {/* Wishlist & Share Buttons */}
+      <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const shareUrl = `${window.location.origin}/products/${product.id}`;
+            navigator.clipboard.writeText(shareUrl);
+            toast.success('Product link copied!');
+          }}
+          title="Share Single Product Link"
+          className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-slate-700 hover:text-gold shadow border border-amber-900/10 transition-transform active:scale-95 text-[10px]"
+        >
+          🔗
+        </button>
+
+        <button
+          onClick={handleWishlist}
+          aria-label="Add to Wishlist"
+          className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-700 hover:text-rose-600 shadow border border-amber-900/10 transition-transform active:scale-95"
+        >
+          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
+        </button>
+      </div>
 
       {/* Product Image Container */}
       <Link to={`/products/${product.id}`} className="block relative aspect-square overflow-hidden bg-amber-50/40">

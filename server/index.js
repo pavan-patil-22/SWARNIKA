@@ -59,9 +59,38 @@ app.use("/api/real-gold", realGoldRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/reviews", reviewRoutes);
 
+import bcrypt from 'bcryptjs';
+
 // Automated MongoDB Seed Initializer
 const seedDatabase = async () => {
   try {
+    // Seed Default Admin & Customer Accounts with Bcrypt Hashed Passwords
+    const adminExists = await User.findOne({ email: "admin@gmail.com" });
+    if (!adminExists) {
+      const hashedAdminPassword = bcrypt.hashSync("Admin@123", 10);
+      await User.create({
+        name: "System Administrator",
+        email: "admin@gmail.com",
+        password: hashedAdminPassword,
+        role: "admin",
+        mustChangePassword: false
+      });
+      console.log("Seeded default admin@gmail.com with hashed password");
+    }
+
+    const userExists = await User.findOne({ email: "user@gmail.com" });
+    if (!userExists) {
+      const hashedUserPassword = bcrypt.hashSync("User@123", 10);
+      await User.create({
+        name: "Valued Customer",
+        email: "user@gmail.com",
+        password: hashedUserPassword,
+        role: "user",
+        mustChangePassword: false
+      });
+      console.log("Seeded default user@gmail.com with hashed password");
+    }
+
     // Seed Sample Reviews
     const reviewCount = await Review.countDocuments();
     if (reviewCount === 0) {

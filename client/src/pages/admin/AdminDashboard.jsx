@@ -76,16 +76,16 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8 text-slate-800 pb-10">
       
-      {/* 1. TOP EXECUTIVE HEADER BANNER (WHITE & GOLDEN PALETTE) */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl text-slate-800 shadow-xl border-2 border-gold/40 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden bg-gradient-to-r from-white via-amber-50/80 to-white">
+      {/* 1. TOP EXECUTIVE HEADER BANNER */}
+      <div className="bg-slate-900 border border-gold/30 p-6 sm:p-8 rounded-3xl text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-2 max-w-xl">
-          <div className="inline-flex items-center gap-2 bg-amber-100/80 border border-gold/40 text-amber-900 text-xs px-3.5 py-1 rounded-full font-bold uppercase tracking-wider shadow-xs">
+          <div className="inline-flex items-center gap-2 bg-slate-800 border border-gold/40 text-gold text-xs px-3.5 py-1 rounded-full font-bold uppercase tracking-wider shadow-xs">
             <Crown className="w-4 h-4 text-gold" /> Live Store Management Hub
           </div>
           <h1 className="font-luxury font-bold text-2xl sm:text-3xl text-gold-gradient">
             SWARNIKA Analytics Workstation
           </h1>
-          <p className="text-xs text-gray-600 leading-relaxed font-medium">
+          <p className="text-xs text-gray-300 leading-relaxed font-medium">
             Real-time MongoDB metrics for 1-Gram imitation jewellery sales, 22K gold inquiries, 30-day price trends, returns, and customer management.
           </p>
         </div>

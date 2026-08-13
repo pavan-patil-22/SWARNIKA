@@ -84,11 +84,20 @@ export const authService = {
     const res = await axiosClient.post("/auth/login", { email, password });
     return res.data;
   },
-  register: async (name, email, password) => {
+  sendOtp: async (email) => {
+    const res = await axiosClient.post("/auth/send-otp", { email });
+    return res.data;
+  },
+  verifyOtp: async (email, otp) => {
+    const res = await axiosClient.post("/auth/verify-otp", { email, otp });
+    return res.data;
+  },
+  register: async (name, email, password, otp) => {
     const res = await axiosClient.post("/auth/register", {
       name,
       email,
       password,
+      otp,
     });
     return res.data;
   },

@@ -45,39 +45,19 @@ export const AuthProvider = ({ children }) => {
       setUser(res);
       return res;
     } catch (err) {
-      // Fallback for default hardcoded credentials if server fails
-      const isExactAdmin = (email === 'admin@gmail.com' && password === 'Admin@123') || email.includes('admin');
-      const isExactUser = (email === 'user@gmail.com' && password === 'User@123');
-
-      const fallbackUser = {
-        id: isExactAdmin ? 'admin-001' : (isExactUser ? 'usr-001' : `usr-${Date.now()}`),
-        name: isExactAdmin ? 'System Administrator' : (isExactUser ? 'Valued Customer' : email.split('@')[0]),
-        email,
-        role: isExactAdmin ? 'admin' : 'user',
-        mustChangePassword: false,
-        token: `jwt-token-${Date.now()}`
-      };
-      setUser(fallbackUser);
-      return fallbackUser;
+      console.error("Authentication login error:", err);
+      throw err;
     }
   };
 
-  const register = async (name, email, password) => {
+  const register = async (name, email, password, otp) => {
     try {
-      const res = await authService.register(name, email, password);
+      const res = await authService.register(name, email, password, otp);
       setUser(res);
       return res;
     } catch (err) {
-      const fallbackUser = {
-        id: `usr-${Date.now()}`,
-        name,
-        email,
-        role: 'user',
-        mustChangePassword: false,
-        token: `jwt-token-${Date.now()}`
-      };
-      setUser(fallbackUser);
-      return fallbackUser;
+      console.error("Authentication registration error:", err);
+      throw err;
     }
   };
 
