@@ -16,7 +16,9 @@ const createTransporter = async () => {
 
   if (user && pass && !pass.includes('YOUR_APP_PASSWORD') && pass.trim().length > 3) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: { user, pass }
     });
   }
