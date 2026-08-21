@@ -128,6 +128,10 @@ export const contactService = {
       return [];
     }
   },
+  replyInquiry: async (id, replyData) => {
+    const res = await axiosClient.post(`/contact/reply/${id}`, replyData);
+    return res.data;
+  },
   updateInquiryStatus: async (id, status) => {
     const res = await axiosClient.put(`/contact/${id}`, { status });
     return res.data;

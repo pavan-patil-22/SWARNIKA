@@ -15,7 +15,7 @@ import { contactService } from '../../services/api';
 import { toast } from 'react-toastify';
 
 export default function AdminContact() {
-  const { inquiries, reloadAdminData } = useAdmin();
+  const { inquiries, loadAllAdminData } = useAdmin();
   const [filter, setFilter] = useState('PENDING');
 
   const [replyingInquiry, setReplyingInquiry] = useState(null);
@@ -38,7 +38,7 @@ export default function AdminContact() {
     setReplyingInquiry(item);
     setReplyMethod(item.phone ? 'WHATSAPP' : 'EMAIL');
     setReplyMessage(
-      `Hello ${item.name},\n\nThank you for reaching out to Aureate Luxe. Regarding your inquiry on "${item.subject}":\n\n`
+      `Hello ${item.name},\n\nThank you for reaching out to SWARNIKA Regarding your inquiry on "${item.subject}":\n\n`
     );
   };
 
@@ -48,17 +48,17 @@ export default function AdminContact() {
     setSending(true);
 
     try {
-      const res = await contactService.replyInquiry(replyingInquiry.id, {
+      const targetId = replyingInquiry.id || replyingInquiry._id;
+      const res = await contactService.replyInquiry(targetId, {
         replyMethod,
         adminReply: replyMessage
       });
 
       if (res.success) {
         if (replyMethod === 'WHATSAPP' && res.whatsappUrl) {
-          toast.success('Reply saved! Opening WhatsApp chat window...', {
+          toast.success('Reply saved to database! Opening WhatsApp chat...', {
             style: { background: '#FFF', color: '#D4AF37', border: '1px solid #D4AF37' }
           });
-          // Open WhatsApp web intent in a new tab
           window.open(res.whatsappUrl, '_blank');
         } else {
           toast.success(`Email reply dispatched to ${replyingInquiry.email}!`, {
@@ -68,10 +68,11 @@ export default function AdminContact() {
 
         setReplyingInquiry(null);
         setReplyMessage('');
-        reloadAdminData();
+        loadAllAdminData();
       }
     } catch (err) {
-      toast.error('Failed to send reply');
+      console.error("Admin inquiry reply error:", err);
+      toast.error(err.response?.data?.message || 'Failed to send reply. Please check details.');
     } finally {
       setSending(false);
     }

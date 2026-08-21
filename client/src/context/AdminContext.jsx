@@ -618,6 +618,7 @@ export const AdminProvider = ({ children }) => {
       pendingReturnsCount,
       pendingInquiriesCount,
       loadAllAdminData,
+      reloadAdminData: loadAllAdminData,
       markAllOrdersAsRead,
       saveProduct,
       removeProduct,

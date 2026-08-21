@@ -1,4 +1,5 @@
 import Contact from '../models/Contact.js';
+import mongoose from 'mongoose';
 import { sendEmail } from '../utils/sendEmail.js';
 
 // Public endpoint: Submit Contact Us Inquiry
@@ -25,19 +26,21 @@ export const submitInquiry = async (req, res) => {
     // Send automated acknowledgement email if configured
     sendEmail({
       to: inquiry.email,
-      subject: `We received your inquiry - Aureate Luxe (${inquiry.id})`,
+      subject: `We received your inquiry - SWARNIKA LUXURY HERITAGE (${inquiry.id})`,
       html: `
-        <div style="font-family: Arial, sans-serif; background-color: #FAF9F5; padding: 20px; color: #111;">
-          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #D4AF37; padding: 30px; border-radius: 12px;">
-            <h2 style="color: #D4AF37; font-family: serif; text-align: center;">Aureate Luxe 1-Gram Jewellery</h2>
-            <h3>Hello ${inquiry.name},</h3>
-            <p>Thank you for reaching out! We have received your inquiry regarding <strong>"${inquiry.subject}"</strong>.</p>
-            <p style="background: #FAF9F5; padding: 12px; border-radius: 8px; font-style: italic;">"${inquiry.message}"</p>
-            <p>Our customer service team will get back to you shortly via Email or WhatsApp.</p>
+        <div style="font-family: Arial, sans-serif; background-color: #FAF9F5; padding: 25px; color: #1e293b;">
+          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 2px solid #D4AF37; padding: 30px; border-radius: 16px;">
+            <h2 style="color: #D4AF37; font-family: serif; text-align: center; margin-top: 0;">SWARNIKA LUXURY HERITAGE</h2>
+            <h3 style="color: #0f172a;">Hello ${inquiry.name},</h3>
+            <p style="font-size: 13px; color: #475569;">Thank you for reaching out to us! We have received your inquiry regarding <strong>"${inquiry.subject}"</strong>.</p>
+            <div style="background: #FAF9F5; padding: 15px; border-left: 4px solid #D4AF37; border-radius: 8px; font-style: italic; margin: 15px 0;">
+              "${inquiry.message}"
+            </div>
+            <p style="font-size: 13px; color: #475569;">Our customer service team will get back to you shortly via Email or WhatsApp.</p>
           </div>
         </div>
       `
-    }).catch(e => console.error("Contact receipt email error", e));
+    }).catch(e => console.error("Contact receipt email notice:", e.message));
 
     res.status(201).json({ success: true, inquiry });
   } catch (error) {
@@ -65,7 +68,12 @@ export const replyInquiry = async (req, res) => {
       return res.status(400).json({ message: "Reply message text is required" });
     }
 
-    const inquiry = await Contact.findOne({ id });
+    // Support lookup by string id OR MongoDB _id
+    let inquiry = await Contact.findOne({ id });
+    if (!inquiry && mongoose.Types.ObjectId.isValid(id)) {
+      inquiry = await Contact.findById(id);
+    }
+
     if (!inquiry) {
       return res.status(404).json({ message: "Contact inquiry not found" });
     }
@@ -81,6 +89,7 @@ export const replyInquiry = async (req, res) => {
     await inquiry.save();
 
     let whatsappUrl = null;
+    let emailDispatched = false;
 
     if (isWhatsApp) {
       // Build WhatsApp wa.me link
@@ -91,40 +100,49 @@ export const replyInquiry = async (req, res) => {
       }
 
       const encodedMessage = encodeURIComponent(
-        `Hello ${inquiry.name},\n\nThank you for reaching out to Aureate Luxe regarding "${inquiry.subject}".\n\n*Response from Aureate Luxe Support*:\n${adminReply}\n\nWarm regards,\nAureate Luxe Team`
+        `Hello ${inquiry.name},\n\nThank you for reaching out to SWARNIKA LUXURY HERITAGE regarding "${inquiry.subject}".\n\n*Official Response from SWARNIKA Support*:\n${adminReply}\n\nWarm regards,\nSWARNIKA LUXURY HERITAGE Team`
       );
 
-      whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
-      console.log(`WhatsApp Reply URL generated for ${inquiry.id}: ${whatsappUrl}`);
+      whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodedMessage}` : `https://wa.me/?text=${encodedMessage}`;
+      console.log(`WhatsApp Reply URL generated for inquiry ${inquiry.id}: ${whatsappUrl}`);
 
     } else {
-      // Dispatch Email via Nodemailer
-      await sendEmail({
-        to: inquiry.email,
-        subject: `Re: ${inquiry.subject} - Response from Aureate Luxe`,
-        html: `
-          <div style="font-family: Arial, sans-serif; background-color: #FAF9F5; padding: 20px; color: #111;">
-            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #D4AF37; padding: 30px; border-radius: 12px;">
-              <h2 style="color: #D4AF37; font-family: serif; text-align: center;">Aureate Luxe 1-Gram Jewellery</h2>
-              <h3>Dear ${inquiry.name},</h3>
-              <p>Thank you for contacting us. Here is our response to your inquiry regarding <strong>"${inquiry.subject}"</strong>:</p>
-              <div style="background: #FAF9F5; padding: 15px; border-left: 4px solid #D4AF37; border-radius: 4px; margin: 20px 0;">
-                <p style="margin: 0; white-space: pre-wrap;">${adminReply}</p>
+      // Dispatch Email via Nodemailer safely
+      try {
+        await sendEmail({
+          to: inquiry.email,
+          subject: `Re: ${inquiry.subject} - SWARNIKA LUXURY HERITAGE`,
+          html: `
+            <div style="font-family: Arial, sans-serif; background-color: #FAF9F5; padding: 25px; color: #1e293b;">
+              <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 2px solid #D4AF37; padding: 30px; border-radius: 16px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <h2 style="color: #D4AF37; font-family: serif; margin: 0;">SWARNIKA</h2>
+                  <p style="font-size: 10px; color: #92400e; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px;">LUXURY HERITAGE</p>
+                </div>
+                <h3 style="color: #0f172a;">Dear ${inquiry.name},</h3>
+                <p style="font-size: 13px; color: #475569;">Thank you for contacting us. Here is our official response to your inquiry regarding <strong>"${inquiry.subject}"</strong>:</p>
+                <div style="background: #FAF9F5; padding: 18px; border-left: 4px solid #D4AF37; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 0; white-space: pre-wrap; font-size: 14px; color: #0f172a;">${adminReply}</p>
+                </div>
+                <p style="font-size: 12px; color: #64748b; font-style: italic;">Original Inquiry Message: "${inquiry.message}"</p>
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+                <p style="font-size: 11px; color: #94a3b8; text-align: center;">SWARNIKA Support Team • 1 Gram & 22K Real Gold Jewellery</p>
               </div>
-              <p style="font-size: 12px; color: #666;">Original Message: "${inquiry.message}"</p>
-              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-              <p style="font-size: 11px; color: #888;">Aureate Luxe Support Team • 1 Gram Polish Replica Jewellery</p>
             </div>
-          </div>
-        `
-      });
-      console.log(`Email Reply dispatched for ${inquiry.id} to ${inquiry.email}`);
+          `
+        });
+        emailDispatched = true;
+        console.log(`Email Reply dispatched for inquiry ${inquiry.id} to ${inquiry.email}`);
+      } catch (emailErr) {
+        console.warn("Nodemailer dispatch notice:", emailErr.message);
+      }
     }
 
     res.json({
       success: true,
       inquiry,
-      whatsappUrl
+      whatsappUrl,
+      emailDispatched
     });
 
   } catch (error) {

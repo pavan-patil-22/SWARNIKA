@@ -17,25 +17,55 @@ import realGoldRoutes from "./routes/realGoldRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 
-// Models for DB Seeding
-import Product from "./models/Product.js";
-import Category from "./models/Category.js";
-import Banner from "./models/Banner.js";
-import Offer from "./models/Offer.js";
-import Setting from "./models/Setting.js";
-import User from "./models/User.js";
-import RealGold from "./models/RealGold.js";
-import Contact from "./models/Contact.js";
-import Review from "./models/Review.js";
-
 dotenv.config();
 
 const app = express();
 
+// Robust CORS Configuration for Vercel Frontend & Render Backend
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:5173",
+  "https://swarnikajewellery.vercel.app",
+  "https://swarnika.vercel.app"
+];
+
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "https://swarnikajewellery.vercel.app","swarnikajewellery.vercel.app"],
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const cleanOrigin = origin.replace(/\/$/, "");
+    if (
+      allowedOrigins.includes(cleanOrigin) ||
+      cleanOrigin.endsWith(".vercel.app") ||
+      cleanOrigin.includes("localhost")
+    ) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins to prevent CORS blocks in production
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
 }));
+
+// Header fallback middleware to guarantee CORS headers on all HTTP responses
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header("Access-Control-Allow-Origin", origin);
+  } else {
+    res.header("Access-Control-Allow-Origin", "*");
+  }
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -59,79 +89,6 @@ app.use("/api/real-gold", realGoldRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/reviews", reviewRoutes);
 
-import bcrypt from 'bcryptjs';
-
-// Automated MongoDB Seed Initializer
-const seedDatabase = async () => {
-  try {
-    // Seed Default Admin & Customer Accounts with Bcrypt Hashed Passwords
-    const adminExists = await User.findOne({ email: "admin@gmail.com" });
-    if (!adminExists) {
-      const hashedAdminPassword = bcrypt.hashSync("Admin@123", 10);
-      await User.create({
-        name: "System Administrator",
-        email: "admin@gmail.com",
-        password: hashedAdminPassword,
-        role: "admin",
-        mustChangePassword: false
-      });
-      console.log("Seeded default admin@gmail.com with hashed password");
-    }
-
-    const userExists = await User.findOne({ email: "user@gmail.com" });
-    if (!userExists) {
-      const hashedUserPassword = bcrypt.hashSync("User@123", 10);
-      await User.create({
-        name: "Valued Customer",
-        email: "user@gmail.com",
-        password: hashedUserPassword,
-        role: "user",
-        mustChangePassword: false
-      });
-      console.log("Seeded default user@gmail.com with hashed password");
-    }
-
-    // Seed Sample Reviews
-    const reviewCount = await Review.countDocuments();
-    if (reviewCount === 0) {
-      await Review.create([
-        {
-          id: "REV_101",
-          name: "Priya Sharma",
-          city: "Mumbai",
-          rating: 5,
-          title: "Indistinguishable from real gold!",
-          text: "I wore the Royal Temple Choker to my cousin's wedding and received dozens of compliments. The 1-gram polish finish is so authentic!",
-          product: "Royal Temple Choker",
-          approved: true
-        },
-        {
-          id: "REV_102",
-          name: "Sowmya Reddy",
-          city: "Hyderabad",
-          rating: 5,
-          title: "Stunning Craftsmanship & Weight",
-          text: "The bridal haram has such impressive micro-gold plating and heavy antique detailing. Fits perfectly for festive functions.",
-          product: "Goddess Heritage Haram",
-          approved: true
-        },
-        {
-          id: "REV_103",
-          name: "Kavita Patel",
-          city: "Ahmedabad",
-          rating: 5,
-          title: "Super fast shipping & premium packaging!",
-          text: "Delivered in 2 days in a velvet gift box. The bangles shine bright and have held their polish impeccably.",
-          product: "Kundan Kada Bangles",
-          approved: true
-        }
-      ]);
-    }
-  } catch (err) {
-    console.error("MongoDB seed error:", err.message);
-  }
-};
-
 // Server Initialization
 const PORT = process.env.PORT || 7000;
 const URL = process.env.MONGOURL || "mongodb://127.0.0.1:27017/goldenshop";
@@ -140,7 +97,6 @@ mongoose
   .connect(URL)
   .then(() => {
     console.log("DB connected Successfully to MongoDB database");
-    seedDatabase();
     app.listen(PORT, () => console.log(`Server is running on Port:${PORT}`));
   })
   .catch((error) => {
