@@ -21,6 +21,12 @@ export const axiosClient = axios.create({
   },
 });
 
+const isLocalApi = 
+  window.location.hostname === "localhost" || 
+  window.location.hostname === "127.0.0.1" || 
+  API_BASE_URL.includes("localhost") || 
+  API_BASE_URL.includes("127.0.0.1");
+
 let coldStartTimer = null;
 
 axiosClient.interceptors.request.use((config) => {
@@ -29,13 +35,13 @@ axiosClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  // Trigger cold-start notification if backend takes > 3.5 seconds
-  if (!coldStartTimer) {
+  // Trigger cold-start notification ONLY for cloud servers (e.g. Render) if response takes > 8 seconds
+  if (!isLocalApi && !coldStartTimer) {
     coldStartTimer = setTimeout(() => {
       window.dispatchEvent(
         new CustomEvent("server-cold-start", { detail: { isWakingUp: true } }),
       );
-    }, 3500);
+    }, 8000);
   }
 
   return config;
@@ -47,9 +53,11 @@ axiosClient.interceptors.response.use(
       clearTimeout(coldStartTimer);
       coldStartTimer = null;
     }
-    window.dispatchEvent(
-      new CustomEvent("server-cold-start", { detail: { isWakingUp: false } }),
-    );
+    if (!isLocalApi) {
+      window.dispatchEvent(
+        new CustomEvent("server-cold-start", { detail: { isWakingUp: false } }),
+      );
+    }
     return response;
   },
   (error) => {
@@ -58,18 +66,18 @@ axiosClient.interceptors.response.use(
       coldStartTimer = null;
     }
 
-    // Check if error is network error or server down (502/503/504) or timeout
     if (
-      !error.response ||
-      error.code === "ECONNABORTED" ||
-      [502, 503, 504].includes(error.response?.status)
+      !isLocalApi &&
+      (!error.response ||
+        error.code === "ECONNABORTED" ||
+        [502, 503, 504].includes(error.response?.status))
     ) {
       window.dispatchEvent(
         new CustomEvent("server-cold-start", {
           detail: { isWakingUp: true, isError: true },
         }),
       );
-    } else {
+    } else if (!isLocalApi) {
       window.dispatchEvent(
         new CustomEvent("server-cold-start", { detail: { isWakingUp: false } }),
       );

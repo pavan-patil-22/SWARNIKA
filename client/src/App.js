@@ -70,7 +70,8 @@ function ServerColdStartBanner() {
     return () => window.removeEventListener('server-cold-start', handleEvent);
   }, []);
 
-  if (!wakingState.isWakingUp) return null;
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (isLocal || !wakingState.isWakingUp) return null;
 
   return (
     <div className="fixed bottom-4 inset-x-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto z-[99999] sm:max-w-md w-auto bg-slate-900/95 backdrop-blur-md text-white border-2 border-gold p-3.5 sm:p-5 rounded-2xl shadow-2xl animate-fadeIn flex items-start justify-between gap-3">
